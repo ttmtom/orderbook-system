@@ -20,7 +20,8 @@ func main() {
 		log.Fatalf("Db connection error")
 	}
 
-	http.HandleFunc("/users", users.SayHello)
+	users.InitController()
+
 	port := fmt.Sprintf(":%s", os.Getenv("WEB_SERVER_PORT"))
 
 	log.Printf("Starting web server at prop %v\n", port)
