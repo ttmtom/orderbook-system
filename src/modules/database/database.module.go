@@ -6,11 +6,11 @@ import (
 	"os"
 )
 
-type DBConnection struct {
+type Database struct {
 	Connection *tarantool.Connection
 }
 
-func NewConnection() (*DBConnection, error) {
+func NewConnection() (*Database, error) {
 	opts := tarantool.Opts{
 		User: os.Getenv("DATABASE_USER"),
 		Pass: os.Getenv("DATABASE_PASSWORD"),
@@ -23,7 +23,7 @@ func NewConnection() (*DBConnection, error) {
 		log.Fatalf("Failed to connect to tarantool: %v\n", err)
 		return nil, err
 	}
-	return &DBConnection{
+	return &Database{
 		Connection: conn,
 	}, nil
 }

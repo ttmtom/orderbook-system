@@ -7,15 +7,24 @@
 package main
 
 import (
-	"orderbook-system/src/utils/database"
+	"orderbook-system/src/modules/database"
+	"orderbook-system/src/modules/users"
 )
 
 // Injectors from wire.go:
 
-func InitializeDBConnection() (*database.DBConnection, error) {
-	dbConnection, err := database.NewConnection()
+func InitializeDatabase() (*database.Database, error) {
+	databaseDatabase, err := database.NewConnection()
 	if err != nil {
 		return nil, err
 	}
-	return dbConnection, nil
+	return databaseDatabase, nil
+}
+
+func InitializeUserModule(db *database.Database) (*users.Module, error) {
+	module, err := users.NewUsersModule(db)
+	if err != nil {
+		return nil, err
+	}
+	return module, nil
 }

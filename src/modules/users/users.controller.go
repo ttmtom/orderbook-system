@@ -4,13 +4,27 @@ import (
 	"net/http"
 )
 
-func userRoute(w http.ResponseWriter, req *http.Request) {
-	if req.Method == "POST" {
-		CreateUser()
-	}
+type Controller struct {
+	Router  http.Handler
+	Service *Service
 }
 
-func InitController() {
-	http.HandleFunc("/users", userRoute)
+func (c *Controller) createUser(w http.ResponseWriter, r *http.Request) {
+	var user User
+	if err := c.Service.CreateUser(&user); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
 
+func NewUserController(service *Service) *Controller {
+	mux := http.NewServeMux()
+	controller := &Controller{
+		Router:  mux,
+		Service: service,
+	}
+
+	mux.HandleFunc("/user", controller.createUser)
+	return controller
 }

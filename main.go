@@ -5,7 +5,6 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
-	"orderbook-system/src/modules/users"
 	"os"
 )
 
@@ -15,12 +14,17 @@ func main() {
 		log.Fatalf("Error loading .env file")
 	}
 
-	_, connectionError := InitializeDBConnection()
-	if connectionError != nil {
-		log.Fatalf("Db connection error")
+	database, connectionErr := InitializeDatabase()
+	if connectionErr != nil {
+		log.Fatalf("Error Database connection error")
 	}
 
-	users.InitController()
+	usersModule, userErr := InitializeUserModule(database)
+	if userErr != nil {
+		log.Fatalf("Error User module error")
+	}
+
+	http.Handle("/user", usersModule.Router())
 
 	port := fmt.Sprintf(":%s", os.Getenv("WEB_SERVER_PORT"))
 
