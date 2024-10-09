@@ -3,9 +3,12 @@ version: '2.1'
 services:
   tarantool:
     image: tarantool/tarantool:latest
+    volumes:
+      - ./schema.lua:/opt/tarantool/schema.lua
     ports:
       - "3301:3301"
     env_file: "./.env"
+    command: tarantool /opt/tarantool/schema.lua
 
 
 #  zoo:

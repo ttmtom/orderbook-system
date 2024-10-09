@@ -11,6 +11,8 @@ require (
 require (
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/google/subcommands v1.2.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/mattn/go-pointer v0.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect

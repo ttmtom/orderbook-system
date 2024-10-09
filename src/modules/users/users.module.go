@@ -1,6 +1,7 @@
 package users
 
 import (
+	"github.com/gorilla/mux"
 	"net/http"
 	"orderbook-system/src/modules/database"
 )
@@ -14,10 +15,10 @@ func (m *Module) Router() http.Handler {
 	return m.UsersController.Router
 }
 
-func NewUsersModule(db *database.Database) (*Module, error) {
+func NewUsersModule(router *mux.Router, db *database.Database) (*Module, error) {
 	service := NewUserService(db)
 	return &Module{
-		UsersController: NewUserController(service),
+		UsersController: NewUserController(router, service),
 		UserService:     service,
 	}, nil
 }

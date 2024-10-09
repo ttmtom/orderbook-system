@@ -7,7 +7,9 @@
 package main
 
 import (
+	"github.com/gorilla/mux"
 	"orderbook-system/src/modules/database"
+	"orderbook-system/src/modules/orders"
 	"orderbook-system/src/modules/users"
 )
 
@@ -21,8 +23,16 @@ func InitializeDatabase() (*database.Database, error) {
 	return databaseDatabase, nil
 }
 
-func InitializeUserModule(db *database.Database) (*users.Module, error) {
-	module, err := users.NewUsersModule(db)
+func InitializeUserModule(router *mux.Router, db *database.Database) (*users.Module, error) {
+	module, err := users.NewUsersModule(router, db)
+	if err != nil {
+		return nil, err
+	}
+	return module, nil
+}
+
+func InitializeOrderModule(router *mux.Router, db *database.Database, usersService *users.Service) (*orders.Module, error) {
+	module, err := orders.NewOrdersModule(router, db, usersService)
 	if err != nil {
 		return nil, err
 	}

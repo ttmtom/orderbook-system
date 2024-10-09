@@ -1,12 +1,11 @@
 package users
 
 type User struct {
-	ID       int
-	Accounts []Account
+	ID string
 }
 
 type Account struct {
-	ID     int
-	Amount float64
-	Type   string
+	UserID   string
+	Amount   float64
+	Currency string
 }
