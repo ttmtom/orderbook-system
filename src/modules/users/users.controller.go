@@ -8,18 +8,13 @@ import (
 	"net/http"
 )
 
-type Controller struct {
-	Router  http.Handler
-	Service *Service
-}
-
 type CreateUserRequest struct {
-	ID string `json:"id"`
+	ID     string  `json:"id"`
+	Amount float64 `json:"amount"`
 }
 
 type CreateUserResponse struct {
-	Status int  `json:"status"`
-	Data   User `json:"data"`
+	Data User `json:"data"`
 }
 
 func (c *Controller) createUser(w http.ResponseWriter, r *http.Request) {
@@ -43,65 +38,73 @@ func (c *Controller) createUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	accounts := []Account{
+		{UserID: user.ID, Currency: "USD", Amount: payload.Amount},
+		{UserID: user.ID, Currency: "BTC", Amount: 0},
+		{UserID: user.ID, Currency: "ETH", Amount: 0},
+	}
+	if err := c.Service.CreateAccounts(accounts); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
 	response := CreateUserResponse{
-		Data:   user,
-		Status: 201,
+		Data: user,
 	}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+type UserInfo struct {
+	User     User      `json:"user"`
+	Accounts []Account `json:"accounts"`
+}
+
+type UserInfoResponse struct {
+	Data UserInfo `json:"data"`
 }
 
 func (c *Controller) userInfo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	log.Printf("Getting user with id %s", id)
-}
+	user, err := c.Service.getUserById(id)
 
-type CreateAccountRequest struct {
-	Currency string `json:"currency"`
-}
-
-type CreateAccountResponse struct {
-	Status int     `json:"status"`
-	Data   Account `json:"data"`
-}
-
-func (c *Controller) createAccount(w http.ResponseWriter, r *http.Request) {
-	var payload CreateAccountRequest
-	body, err := io.ReadAll(r.Body)
+	if user == nil {
+		log.Printf("User with id %s not found", id)
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
 	if err != nil {
+		log.Printf("Error getting user with id %s: %v", id, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	err = json.Unmarshal(body, &payload)
+	accounts, err := c.Service.GetUserAccounts(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	vars := mux.Vars(r)
-	id := vars["id"]
-	log.Printf("Creating account for user with id %s", id)
-	account := Account{
-		Currency: payload.Currency,
-		UserID:   id,
-		Amount:   0,
+		accounts = []Account{}
 	}
 
-	if err := c.Service.CreateAccount(account); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	response := UserInfoResponse{
+		Data: UserInfo{
+			User:     *user,
+			Accounts: accounts,
+		},
 	}
-	w.WriteHeader(http.StatusCreated)
-	response := CreateAccountResponse{
-		Data:   account,
-		Status: 201,
-	}
+
+	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+type Controller struct {
+	Router  http.Handler
+	Service *Service
 }
 
 func NewUserController(router *mux.Router, service *Service) *Controller {
@@ -113,7 +116,6 @@ func NewUserController(router *mux.Router, service *Service) *Controller {
 
 	userRouter.HandleFunc("", controller.createUser).Methods("POST")
 	userRouter.HandleFunc("/{id}", controller.userInfo).Methods("GET")
-	userRouter.HandleFunc("/{id}/accounts", controller.createAccount).Methods("POST")
 
 	return controller
 }
