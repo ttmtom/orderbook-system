@@ -1,11 +1,14 @@
 package users
 
 type User struct {
-	ID string
+	ID      string
+	Balance float64
 }
 
-type Account struct {
-	UserID   string
-	Amount   float64
-	Currency string
+type Position struct {
+	UserID     string
+	Market     string
+	Side       string
+	EntryPrice float64
+	Size       float64
 }

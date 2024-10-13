@@ -39,16 +39,6 @@ func (c *Controller) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accounts := []Account{
-		{UserID: user.ID, Currency: "USD", Amount: payload.Amount},
-		{UserID: user.ID, Currency: "BTC", Amount: 0},
-		{UserID: user.ID, Currency: "ETH", Amount: 0},
-	}
-	if err := c.Service.CreateAccounts(accounts); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	response := CreateUserResponse{
@@ -60,8 +50,8 @@ func (c *Controller) createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 type UserInfo struct {
-	User     User      `json:"user"`
-	Accounts []Account `json:"accounts"`
+	User      User       `json:"user"`
+	Positions []Position `json:"position"`
 }
 
 type UserInfoResponse struct {
@@ -72,7 +62,7 @@ func (c *Controller) userInfo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	log.Printf("Getting user with id %s", id)
-	user, err := c.Service.getUserById(id)
+	user, err := c.Service.GetUserById(id)
 
 	if user == nil {
 		log.Printf("User with id %s not found", id)
@@ -84,15 +74,10 @@ func (c *Controller) userInfo(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	accounts, err := c.Service.GetUserAccounts(id)
-	if err != nil {
-		accounts = []Account{}
-	}
 
 	response := UserInfoResponse{
 		Data: UserInfo{
-			User:     *user,
-			Accounts: accounts,
+			User: *user,
 		},
 	}
 

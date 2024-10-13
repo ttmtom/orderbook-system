@@ -7,13 +7,19 @@ type Rate struct {
 }
 
 type Order struct {
-	ID        int
-	UserID    string
-	Rate      Rate
-	Amount    float64
-	Type      string
-	Status    string
-	CreatedAt int64
-	UpdatedAt int64
-	Pair      int
+	ID     string
+	UserID string
+	Market string
+	Side   string
+	Price  float64
+	Size   float64
+	Status string
+}
+
+type Position struct {
+	UserID     string
+	Market     string
+	Side       string
+	EntryPrice float64
+	Size       float64
 }
