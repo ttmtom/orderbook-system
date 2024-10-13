@@ -20,18 +20,31 @@ func (s *Service) canPlaceOrder(equity, margin, price, size float64) bool {
 	return newMargin > 0.1
 }
 
-func (s *Service) PlaceOrder(createOrderReq CreateOrderRequest) (Order, error) {
+func (s *Service) PlaceOrder(createOrderReq CreateOrderRequest) (*Order, error) {
 	_, err := s.UsersService.GetUserById(createOrderReq.UserId)
 	if err != nil {
-		return Order{}, err
+		return &Order{}, err
 	}
 
-	if !s.canPlaceOrder(s.UsersService.CalculateAccountEquity(createOrderReq.UserId),
-		s.UsersService.CalculateAccountMargin(createOrderReq.UserId),
-		createOrderReq.Price,
+	price, err := s.UsersService.GetCurrentMarketPrice(createOrderReq.Market)
+	if err != nil {
+		return nil, err
+	}
+
+	equity, eErr := s.UsersService.CalculateAccountEquity(createOrderReq.UserId)
+	if eErr != nil {
+		return nil, eErr
+	}
+	margin, mErr := s.UsersService.CalculateAccountMargin(createOrderReq.UserId)
+	if mErr != nil {
+		return nil, mErr
+	}
+	if !s.canPlaceOrder(equity,
+		margin,
+		price,
 		createOrderReq.Size,
 	) {
-		return Order{}, errors.New("insufficient margin")
+		return nil, errors.New("insufficient margin")
 	}
 
 	order := Order{
@@ -39,14 +52,14 @@ func (s *Service) PlaceOrder(createOrderReq CreateOrderRequest) (Order, error) {
 		UserID: createOrderReq.UserId,
 		Market: createOrderReq.Market,
 		Side:   createOrderReq.Side,
-		Price:  createOrderReq.Price,
+		Price:  price,
 		Size:   createOrderReq.Size,
 		Status: "pending",
 	}
 
 	s.handleOrderAsync(order)
 
-	return order, nil
+	return &order, nil
 }
 
 func (s *Service) insertOrder(order Order) {
@@ -82,6 +95,23 @@ func (s *Service) handleOrderAsync(order Order) {
 	}()
 }
 
+func (s *Service) getOrdersById(id string) ([]Order, error) {
+	var orders []Order
+	conn := s.Database.Connection
+	err := conn.Do(
+		tarantool.
+			NewSelectRequest("orders").
+			Limit(1).
+			Iterator(tarantool.IterEq).
+			Key([]interface{}{id}),
+	).GetTyped(&orders)
+	if err != nil {
+		log.Fatalf("Failed to get orders by Side: %s", err)
+		return nil, err
+	}
+	return orders, nil
+}
+
 func (s *Service) getOrdersBySide(side, status string) []Order {
 	var orders []Order
 	conn := s.Database.Connection
@@ -89,7 +119,6 @@ func (s *Service) getOrdersBySide(side, status string) []Order {
 		tarantool.
 			NewSelectRequest("orders").
 			Index("todo_orders").
-			Limit(1).
 			Iterator(tarantool.IterEq).
 			Key([]interface{}{side, status}),
 	).GetTyped(&orders)

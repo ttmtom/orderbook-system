@@ -16,7 +16,6 @@ type CreateOrderRequest struct {
 	UserId string  `json:"userId"`
 	Market string  `json:"market"`
 	Side   string  `json:"side"`
-	Price  float64 `json:"price"`
 	Size   float64 `json:"size"`
 }
 
@@ -54,7 +53,18 @@ func (c *Controller) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) GetOrder(w http.ResponseWriter, r *http.Request) {
-
+	vars := mux.Vars(r)
+	orderId := vars["orderId"]
+	order, err := c.Service.getOrdersById(orderId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(order); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func NewOrdersController(router *mux.Router, service *Service) *Controller {

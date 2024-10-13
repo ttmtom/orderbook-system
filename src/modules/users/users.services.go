@@ -59,18 +59,22 @@ func (s *Service) CreateUser(user *User) error {
 	return nil
 }
 
-func (s *Service) CalculateAccountEquity(userID string) float64 {
+func (s *Service) CalculateAccountEquity(userID string) (float64, error) {
 	user, _ := s.GetUserById(userID)
 	positions := s.GetPositions(userID)
 
 	unrealizedPNL := 0.0
 	for _, position := range positions {
-		currentPrice := s.GetCurrentMarketPrice(position.Market)
+		currentPrice, err := s.GetCurrentMarketPrice(position.Market)
+		if err != nil {
+			log.Fatalf("Failed to get current market price: %s", err)
+			return 0, err
+		}
 		unrealizedPNL += position.SideMultiplier() * position.Size * (currentPrice - position.EntryPrice)
 	}
 
 	accountEquity := user.Balance + unrealizedPNL
-	return accountEquity
+	return accountEquity, nil
 }
 
 func (s *Service) GetPositions(userID string) []Position {
@@ -95,22 +99,45 @@ func (s *Service) UpdatePosition(position Position) {
 	}
 }
 
-func (s *Service) GetCurrentMarketPrice(market string) float64 {
-	return 0
+func (s *Service) GetCurrentMarketPrice(market string) (float64, error) {
+	conn := s.Database.Connection
+	var marketRates []Rate
+	err := conn.Do(
+		tarantool.
+			NewSelectRequest("rates").
+			Limit(1).
+			Iterator(tarantool.IterEq).
+			Key([]interface{}{market}),
+	).GetTyped(&marketRates)
+
+	if err != nil {
+		log.Fatalf("Failed to get market rates: %s", err)
+		return 0, err
+	}
+
+	return marketRates[0].Rate, nil
 }
 
-func (s *Service) CalculateAccountMargin(userID string) float64 {
-	accountEquity := s.CalculateAccountEquity(userID)
+func (s *Service) CalculateAccountMargin(userID string) (float64, error) {
+	accountEquity, err := s.CalculateAccountEquity(userID)
+	if err != nil {
+		log.Fatalf("Failed to calculate account equity: %s", err)
+		return 0, err
+	}
 	positions := s.GetPositions(userID)
 
 	totalPositionNotional := 0.0
 	for _, position := range positions {
-		currentPrice := s.GetCurrentMarketPrice(position.Market)
+		currentPrice, err := s.GetCurrentMarketPrice(position.Market)
+		if err != nil {
+			log.Fatalf("Failed to get current market price: %s", err)
+			return 0, err
+		}
 		totalPositionNotional += position.Size * currentPrice
 	}
 
 	accountMargin := accountEquity / totalPositionNotional
-	return accountMargin
+	return accountMargin, nil
 }
 
 func (p *Position) SideMultiplier() float64 {

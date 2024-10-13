@@ -1,11 +1,5 @@
 package orders
 
-type Rate struct {
-	Rate      float64
-	Currency  string
-	UpdatedAt int64
-}
-
 type Order struct {
 	ID     string
 	UserID string

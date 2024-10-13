@@ -12,3 +12,9 @@ type Position struct {
 	EntryPrice float64
 	Size       float64
 }
+
+type Rate struct {
+	Rate      float64
+	Currency  string
+	UpdatedAt int64
+}
