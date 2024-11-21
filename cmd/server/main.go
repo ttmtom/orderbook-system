@@ -1,16 +1,17 @@
 package main
 
 import (
-	"github.com/go-playground/validator"
 	"log/slog"
+	"os"
+
 	"orderbook/config"
 	"orderbook/internal/adapter/database/postgres"
 	"orderbook/internal/adapter/database/postgres/repository"
 	"orderbook/internal/adapter/handler"
 	"orderbook/internal/adapter/router"
 	"orderbook/internal/core/service"
+	"orderbook/internal/pkg/validator"
 	"orderbook/pkg/logger"
-	"os"
 )
 
 func main() {

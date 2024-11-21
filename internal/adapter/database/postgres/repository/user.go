@@ -25,7 +25,7 @@ func (ur *UserRepository) IsUserExist(email string) bool {
 		Find(&exists)
 
 	if results.Error != nil {
-		slog.Info("isuser exist", results.Error.Error())
+		slog.Info("user exist", results.Error.Error())
 		return false
 	}
 	slog.Info("ess", exists)

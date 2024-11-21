@@ -23,7 +23,8 @@ func NewUserHandler(validator *validator.Validate, svc *service.UserService) *Us
 }
 
 type registerRequest struct {
-	Email string `json:"email" validate:"required,email" example:"test@example.com"`
+	Email    string `json:"email" validate:"required,email" example:"test@example.com"`
+	Password string `json:"password" validate:"required,cPassword"`
 }
 
 func (uh *UserHandler) Register(ctx echo.Context) error {
@@ -40,7 +41,7 @@ func (uh *UserHandler) Register(ctx echo.Context) error {
 		})
 	}
 
-	user, err := uh.svc.UserRegistration(req.Email)
+	user, err := uh.svc.UserRegistration(req.Email, req.Password)
 
 	if err != nil {
 		slog.Info("Error during registration", err)

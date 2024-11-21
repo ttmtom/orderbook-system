@@ -1,19 +1,19 @@
 package model
 
 import (
+	"database/sql"
 	"gorm.io/gorm"
-)
-
-type UserType string
-
-const (
-	Free    UserType = "free"
-	Premium UserType = "premium"
+	"time"
 )
 
 type User struct {
 	gorm.Model
-	Email       string   `gorm:"unique;not null" json:"email"`
-	UserType    UserType `gorm:"default:free" json:"userType"`
-	DisplayName *string  `json:"displayName"`
+	ID           uint         `gorm:"primarykey" json:"id"`
+	IDHash       string       `gorm:"unique;not null" json:"idHash"`
+	Email        string       `gorm:"unique;not null" json:"email"`
+	PasswordHash string       `gorm:"not null" json:"passwordHash"`
+	DisplayName  *string      `json:"displayName"`
+	CreatedAt    time.Time    `json:"createdAt"`
+	UpdatedAt    time.Time    `json:"updatedAt"`
+	DeletedAt    sql.NullTime `gorm:"index" json:"deletedAt"`
 }

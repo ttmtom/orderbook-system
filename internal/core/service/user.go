@@ -2,8 +2,10 @@ package service
 
 import (
 	"errors"
+	"log/slog"
 	"orderbook/internal/adapter/database/postgres/repository"
 	"orderbook/internal/core/model"
+	"orderbook/internal/pkg/security"
 )
 
 type UserServiceError string
@@ -11,6 +13,7 @@ type UserServiceError string
 const (
 	EmailAlreadyExist UserServiceError = "EmailAlreadyExist"
 	UserNotFound      UserServiceError = "UserNotFound"
+	Unexpected        UserServiceError = "Unexpected"
 )
 
 type UserService struct {
@@ -23,13 +26,22 @@ func NewUserService(resp *repository.UserRepository) *UserService {
 	}
 }
 
-func (us *UserService) UserRegistration(email string) (*model.User, error) {
+func (us *UserService) UserRegistration(email string, password string) (*model.User, error) {
 	if us.resp.IsUserExist(email) {
 		return nil, errors.New(string(EmailAlreadyExist))
 	}
 
+	hashedPWD, err := security.HashPassword(password)
+	if err != nil {
+		return nil, errors.New(string(Unexpected))
+	}
+
+	slog.Info(hashedPWD)
+
 	user := &model.User{
-		Email: email,
+		Email:        email,
+		IDHash:       security.HashEmail(email),
+		PasswordHash: hashedPWD,
 	}
 
 	return us.resp.CreateUser(user)
