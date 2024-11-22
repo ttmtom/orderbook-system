@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/go-playground/validator"
 	"orderbook/internal/pkg/response"
+	"orderbook/pkg/utils"
 
 	"github.com/labstack/echo/v4"
 	"log/slog"
@@ -28,21 +29,13 @@ type registerRequest struct {
 }
 
 func (uh *UserHandler) Register(ctx echo.Context) error {
-	req := new(registerRequest)
-	if err := ctx.Bind(req); err != nil {
-		slog.Info("Http error", err.Error())
-		return response.FailureResponse(http.StatusBadRequest, err.Error())
-	}
-	if err := uh.validator.Struct(req); err != nil {
-		slog.Error("Validation error", err)
-		return response.FailureResponse(http.StatusBadRequest, echo.Map{
-			"Message": "Invalid input",
-			"Error":   err.Error(),
-		})
+	req, err := utils.ValidateStruct(ctx, uh.validator, new(registerRequest))
+	if err != nil {
+		slog.Info("Validation Error", err.Error())
+		return err
 	}
 
 	user, err := uh.svc.UserRegistration(req.Email, req.Password)
-
 	if err != nil {
 		slog.Info("Error during registration", err)
 		if err.Error() == string(service.EmailAlreadyExist) {
@@ -76,3 +69,16 @@ func (uh *UserHandler) GetUser(ctx echo.Context) error {
 	}
 	return response.SuccessResponse(ctx, http.StatusOK, user)
 }
+
+type userLoginRequest struct {
+	Email    string `param:"email" validate:"required,email" example:"hi@example.com"`
+	Password string `json:"password" validate:"required,cPassword"`
+}
+
+//func (uh *UserHandler) Login(ctx echo.Context) error {
+//	req, err := utils.ValidateStruct(ctx, uh.validator, new(userLoginRequest))
+//	if err != nil {
+//		slog.Info("Http error", err.Error())
+//		return err
+//	}
+//}

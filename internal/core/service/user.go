@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"log/slog"
 	"orderbook/internal/adapter/database/postgres/repository"
 	"orderbook/internal/core/model"
 	"orderbook/internal/pkg/security"
@@ -35,8 +34,6 @@ func (us *UserService) UserRegistration(email string, password string) (*model.U
 	if err != nil {
 		return nil, errors.New(string(Unexpected))
 	}
-
-	slog.Info(hashedPWD)
 
 	user := &model.User{
 		Email:        email,

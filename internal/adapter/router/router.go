@@ -32,6 +32,7 @@ func NewRouter(
 	user := e.Group("/users")
 	{
 		user.POST("", userHandler.Register)
+		//user.POST("/login", userHandler.Login)
 		/* TODO add auth
 		authUser := user.Group("/").Use(authMiddleware())
 		*/
