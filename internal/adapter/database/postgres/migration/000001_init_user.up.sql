@@ -1,5 +1,3 @@
-CREATE TYPE "users_type_enum" AS ENUM ('free', 'premium');
-
 CREATE TABLE "users" (
     "id" SERIAL PRIMARY KEY,
     "id_hash" VARCHAR UNIQUE NOT NULL,

@@ -2,8 +2,10 @@ package handler
 
 import (
 	"github.com/go-playground/validator"
+	"orderbook/internal/core/model"
 	"orderbook/internal/pkg/response"
 	"orderbook/pkg/utils"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"log/slog"
@@ -20,6 +22,24 @@ func NewUserHandler(validator *validator.Validate, svc *service.UserService) *Us
 	return &UserHandler{
 		svc,
 		validator,
+	}
+}
+
+type useResponse struct {
+	ID          string    `json:"id"`
+	Email       string    `json:"email"`
+	DisplayName *string   `json:"displayName"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+func (uh *UserHandler) formatUserResponse(user *model.User) *useResponse {
+	return &useResponse{
+		Email:       user.Email,
+		ID:          user.IDHash,
+		DisplayName: user.DisplayName,
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
 	}
 }
 
@@ -44,11 +64,11 @@ func (uh *UserHandler) Register(ctx echo.Context) error {
 		return response.FailureResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	return response.SuccessResponse(ctx, http.StatusOK, user)
+	return response.SuccessResponse(ctx, http.StatusOK, uh.formatUserResponse(user))
 }
 
 type getUserRequest struct {
-	ID uint `param:"id" validate:"required,min=1" example:"1"`
+	ID string `param:"id" validate:"required,min=1" example:"1"`
 }
 
 func (uh *UserHandler) GetUser(ctx echo.Context) error {
@@ -67,7 +87,7 @@ func (uh *UserHandler) GetUser(ctx echo.Context) error {
 		}
 		return response.FailureResponse(http.StatusInternalServerError, err.Error())
 	}
-	return response.SuccessResponse(ctx, http.StatusOK, user)
+	return response.SuccessResponse(ctx, http.StatusOK, uh.formatUserResponse(user))
 }
 
 type userLoginRequest struct {

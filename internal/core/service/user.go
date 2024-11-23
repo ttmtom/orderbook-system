@@ -44,8 +44,8 @@ func (us *UserService) UserRegistration(email string, password string) (*model.U
 	return us.resp.CreateUser(user)
 }
 
-func (us *UserService) GetUserInformation(id uint) (*model.User, error) {
-	user, err := us.resp.GetUserById(id)
+func (us *UserService) GetUserInformation(id string) (*model.User, error) {
+	user, err := us.resp.GetUserByIdHash(id)
 	if err != nil {
 		return nil, errors.New(string(UserNotFound))
 	}

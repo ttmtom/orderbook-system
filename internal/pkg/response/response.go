@@ -19,13 +19,13 @@ func SuccessResponse(ctx echo.Context, code int, data any) error {
 
 type errorResponse struct {
 	Success bool  `json:"success" example:"false"`
-	Errors  []any `json:"data" example:"Error message 1, Error message 2"`
+	Data    []any `json:"data" example:"Error message 1, Error message 2"`
 }
 
 func FailureResponse(code int, data ...any) error {
 	rsp := &errorResponse{
 		Success: false,
-		Errors:  data,
+		Data:    data,
 	}
 
 	return echo.NewHTTPError(code, rsp)

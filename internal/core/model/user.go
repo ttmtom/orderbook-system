@@ -2,12 +2,10 @@ package model
 
 import (
 	"database/sql"
-	"gorm.io/gorm"
 	"time"
 )
 
 type User struct {
-	gorm.Model
 	ID           uint         `gorm:"primarykey" json:"id"`
 	IDHash       string       `gorm:"unique;not null" json:"idHash"`
 	Email        string       `gorm:"unique;not null" json:"email"`
