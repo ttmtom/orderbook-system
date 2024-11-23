@@ -1,4 +1,4 @@
-package handler
+package controller
 
 import (
 	"github.com/go-playground/validator"
@@ -13,13 +13,13 @@ import (
 	"orderbook/internal/core/service"
 )
 
-type UserHandler struct {
+type UserController struct {
 	svc       *service.UserService
 	validator *validator.Validate
 }
 
-func NewUserHandler(validator *validator.Validate, svc *service.UserService) *UserHandler {
-	return &UserHandler{
+func NewUserController(validator *validator.Validate, svc *service.UserService) *UserController {
+	return &UserController{
 		svc,
 		validator,
 	}
@@ -33,7 +33,7 @@ type useResponse struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
-func (uh *UserHandler) formatUserResponse(user *model.User) *useResponse {
+func (uc *UserController) formatUserResponse(user *model.User) *useResponse {
 	return &useResponse{
 		Email:       user.Email,
 		ID:          user.IDHash,
@@ -48,14 +48,14 @@ type registerRequest struct {
 	Password string `json:"password" validate:"required,cPassword"`
 }
 
-func (uh *UserHandler) Register(ctx echo.Context) error {
-	req, err := utils.ValidateStruct(ctx, uh.validator, new(registerRequest))
+func (uc *UserController) Register(ctx echo.Context) error {
+	req, err := utils.ValidateStruct(ctx, uc.validator, new(registerRequest))
 	if err != nil {
 		slog.Info("Validation Error", err.Error())
 		return err
 	}
 
-	user, err := uh.svc.UserRegistration(req.Email, req.Password)
+	user, err := uc.svc.UserRegistration(req.Email, req.Password)
 	if err != nil {
 		slog.Info("Error during registration", err)
 		if err.Error() == string(service.EmailAlreadyExist) {
@@ -64,21 +64,21 @@ func (uh *UserHandler) Register(ctx echo.Context) error {
 		return response.FailureResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	return response.SuccessResponse(ctx, http.StatusOK, uh.formatUserResponse(user))
+	return response.SuccessResponse(ctx, http.StatusOK, uc.formatUserResponse(user))
 }
 
 type getUserRequest struct {
 	ID string `param:"id" validate:"required,min=1" example:"1"`
 }
 
-func (uh *UserHandler) GetUser(ctx echo.Context) error {
+func (uc *UserController) GetUser(ctx echo.Context) error {
 	var req getUserRequest
 	if err := ctx.Bind(&req); err != nil {
 		slog.Info("Invalid request body", err)
 		return err
 	}
 
-	user, err := uh.svc.GetUserInformation(req.ID)
+	user, err := uc.svc.GetUserInformation(req.ID)
 	if err != nil {
 		slog.Info("Error during registration", err)
 
@@ -87,7 +87,7 @@ func (uh *UserHandler) GetUser(ctx echo.Context) error {
 		}
 		return response.FailureResponse(http.StatusInternalServerError, err.Error())
 	}
-	return response.SuccessResponse(ctx, http.StatusOK, uh.formatUserResponse(user))
+	return response.SuccessResponse(ctx, http.StatusOK, uc.formatUserResponse(user))
 }
 
 type userLoginRequest struct {
@@ -95,7 +95,7 @@ type userLoginRequest struct {
 	Password string `json:"password" validate:"required,cPassword"`
 }
 
-//func (uh *UserHandler) Login(ctx echo.Context) error {
+//func (uh *UserController) Login(ctx echo.Context) error {
 //	req, err := utils.ValidateStruct(ctx, uh.validator, new(userLoginRequest))
 //	if err != nil {
 //		slog.Info("Http error", err.Error())

@@ -43,16 +43,20 @@ func (ur *UserRepository) updatedIDHashOnCreateUserDone(user *model.User) (tx *g
 }
 
 func (ur *UserRepository) CreateUser(user *model.User) (*model.User, error) {
-	result := ur.DB.Create(&user)
+	err := ur.DB.Transaction(func(tx *gorm.DB) error {
+		result := ur.DB.Create(&user)
+		if result.Error != nil {
+			return result.Error
+		}
 
-	if result.Error != nil {
-		slog.Info("Error on creating user", result.Error)
-		return nil, result.Error
+		result = ur.updatedIDHashOnCreateUserDone(user)
+		return result.Error
+	})
+	if err != nil {
+		slog.Info("Error on creating user", err.Error)
+		return nil, err
 	}
-
-	result = ur.updatedIDHashOnCreateUserDone(user)
-
-	return user, result.Error
+	return user, nil
 }
 
 func (ur *UserRepository) getUserById(id uint) (*model.User, error) {

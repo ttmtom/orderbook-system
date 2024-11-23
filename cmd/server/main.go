@@ -2,14 +2,12 @@ package main
 
 import (
 	"log/slog"
+	"orderbook/internal/core/module"
 	"os"
 
 	"orderbook/config"
 	"orderbook/internal/adapter/database/postgres"
-	"orderbook/internal/adapter/database/postgres/repository"
-	"orderbook/internal/adapter/handler"
 	"orderbook/internal/adapter/router"
-	"orderbook/internal/core/service"
 	"orderbook/internal/pkg/validator"
 	"orderbook/pkg/logger"
 )
@@ -31,13 +29,11 @@ func main() {
 
 	v := validator.New()
 
-	userRepository := repository.NewUserRepository(db.DB)
-	userService := service.NewUserService(userRepository)
-	userHandler := handler.NewUserHandler(v, userService)
+	moduleContainer := module.InitModuleContainer(db.DB, v)
 
 	r := router.NewRouter(
 		c.HttpConfig,
-		userHandler,
+		moduleContainer,
 	)
 
 	err = r.Serve()
