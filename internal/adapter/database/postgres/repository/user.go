@@ -88,3 +88,18 @@ func (ur *UserRepository) GetUserByIdHash(id string) (*model.User, error) {
 
 	return user, nil
 }
+
+func (ur *UserRepository) GetUserByEmail(email string) (*model.User, error) {
+	var user *model.User
+	result := ur.DB.Model(&model.User{}).
+		Select("*").
+		Where("email = ?", email).
+		First(&user)
+
+	if result.Error != nil {
+		slog.Info("Error on getting user by id", result.Error)
+		return nil, result.Error
+	}
+
+	return user, nil
+}

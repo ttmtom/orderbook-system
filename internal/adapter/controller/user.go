@@ -72,9 +72,9 @@ type getUserRequest struct {
 }
 
 func (uc *UserController) GetUser(ctx echo.Context) error {
-	var req getUserRequest
-	if err := ctx.Bind(&req); err != nil {
-		slog.Info("Invalid request body", err)
+	req, err := utils.ValidateStruct(ctx, uc.validator, new(getUserRequest))
+	if err != nil {
+		slog.Info("Validation Error", err.Error())
 		return err
 	}
 
@@ -95,10 +95,21 @@ type userLoginRequest struct {
 	Password string `json:"password" validate:"required,cPassword"`
 }
 
-//func (uh *UserController) Login(ctx echo.Context) error {
-//	req, err := utils.ValidateStruct(ctx, uh.validator, new(userLoginRequest))
-//	if err != nil {
-//		slog.Info("Http error", err.Error())
-//		return err
-//	}
-//}
+func (uc *UserController) Login(ctx echo.Context) error {
+	req, err := utils.ValidateStruct(ctx, uc.validator, new(userLoginRequest))
+	if err != nil {
+		slog.Info("Validation Error", err.Error())
+		return err
+	}
+
+	_, jwt, err := uc.svc.UserLogin(req.Email, req.Password)
+	if err != nil {
+		slog.Info("Error during login", err)
+
+		if err.Error() == string(service.Unauthorized) {
+			return response.FailureResponse(http.StatusNotFound, err.Error())
+		}
+		return response.FailureResponse(http.StatusInternalServerError, err.Error())
+	}
+	return response.SuccessResponse(ctx, http.StatusOK, jwt)
+}

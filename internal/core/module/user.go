@@ -31,6 +31,7 @@ func (m *UserModule) InitUserRoute(e *echo.Echo) {
 	user := e.Group("/users")
 	{
 		user.POST("", m.controller.Register)
+		user.POST("/login", m.controller.Login)
 		/* TODO add auth
 		authUser := user.Group("/").Use(authMiddleware())
 		*/
