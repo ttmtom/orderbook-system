@@ -8,7 +8,7 @@ import (
 )
 
 type UserRepository struct {
-	DB *gorm.DB
+	db *gorm.DB
 }
 
 func NewUserRepository(db *gorm.DB) *UserRepository {
@@ -20,7 +20,7 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 func (ur *UserRepository) IsUserExist(email string) bool {
 	var exists bool
 
-	results := ur.DB.Model(&model.User{}).
+	results := ur.db.Model(&model.User{}).
 		Select("count(*) > 0").
 		Where("email = ?", email).
 		Find(&exists)
@@ -35,7 +35,7 @@ func (ur *UserRepository) IsUserExist(email string) bool {
 }
 
 func (ur *UserRepository) updatedIDHashOnCreateUserDone(user *model.User) (tx *gorm.DB) {
-	result := ur.DB.Model(&user).Updates(map[string]interface{}{
+	result := ur.db.Model(&user).Updates(map[string]interface{}{
 		"id_hash": security.HashUserId(user.ID),
 	})
 
@@ -43,8 +43,8 @@ func (ur *UserRepository) updatedIDHashOnCreateUserDone(user *model.User) (tx *g
 }
 
 func (ur *UserRepository) CreateUser(user *model.User) (*model.User, error) {
-	err := ur.DB.Transaction(func(tx *gorm.DB) error {
-		result := ur.DB.Create(&user)
+	err := ur.db.Transaction(func(tx *gorm.DB) error {
+		result := ur.db.Create(&user)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -61,7 +61,7 @@ func (ur *UserRepository) CreateUser(user *model.User) (*model.User, error) {
 
 func (ur *UserRepository) getUserById(id uint) (*model.User, error) {
 	var user *model.User
-	result := ur.DB.Model(&model.User{}).
+	result := ur.db.Model(&model.User{}).
 		Select("*").
 		Where("id = ?", id).
 		First(&user)
@@ -76,7 +76,7 @@ func (ur *UserRepository) getUserById(id uint) (*model.User, error) {
 
 func (ur *UserRepository) GetUserByIdHash(id string) (*model.User, error) {
 	var user *model.User
-	result := ur.DB.Model(&model.User{}).
+	result := ur.db.Model(&model.User{}).
 		Select("*").
 		Where("id_hash = ?", id).
 		First(&user)
@@ -91,7 +91,7 @@ func (ur *UserRepository) GetUserByIdHash(id string) (*model.User, error) {
 
 func (ur *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	var user *model.User
-	result := ur.DB.Model(&model.User{}).
+	result := ur.db.Model(&model.User{}).
 		Select("*").
 		Where("email = ?", email).
 		First(&user)

@@ -1,5 +1,7 @@
-DROP INDEX IF exists "email";
+BEGIN;
+    DROP INDEX IF exists "email";
 
-DROP TABLE IF EXISTS "users";
+    DROP TABLE IF EXISTS "users";
 
-DROP TYPE IF EXISTS "users_type_enum";
+    DROP TYPE IF EXISTS "users_type_enum";
+COMMIT;

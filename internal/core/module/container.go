@@ -6,13 +6,16 @@ import (
 )
 
 type Container struct {
-	UserModule *UserModule
+	UserModule   *UserModule
+	CommonModule *CommonModule
 }
 
 func InitModuleContainer(connection *gorm.DB, validator *validator.Validate) *Container {
-	userModule := NewUserModule(connection, validator)
+	commonModule := NewCommonModule(connection)
+	userModule := NewUserModule(connection, validator, commonModule)
 
 	return &Container{
 		userModule,
+		commonModule,
 	}
 }

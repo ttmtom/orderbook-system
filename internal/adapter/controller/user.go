@@ -68,7 +68,7 @@ func (uc *UserController) Register(ctx echo.Context) error {
 }
 
 type getUserRequest struct {
-	ID string `param:"id" validate:"required,min=1" example:"1"`
+	ID string `param:"idHash" validate:"required,min=1" example:"1"`
 }
 
 func (uc *UserController) GetUser(ctx echo.Context) error {
@@ -102,7 +102,7 @@ func (uc *UserController) Login(ctx echo.Context) error {
 		return err
 	}
 
-	_, jwt, err := uc.svc.UserLogin(req.Email, req.Password)
+	user, jwt, err := uc.svc.UserLogin(req.Email, req.Password)
 	if err != nil {
 		slog.Info("Error during login", err)
 
@@ -111,5 +111,25 @@ func (uc *UserController) Login(ctx echo.Context) error {
 		}
 		return response.FailureResponse(http.StatusInternalServerError, err.Error())
 	}
-	return response.SuccessResponse(ctx, http.StatusOK, jwt)
+
+	ctx.SetCookie(&http.Cookie{
+		Name:     "x-access-token",
+		Value:    jwt.AccessToken,
+		Expires:  jwt.AccessTokenClaims.ExpiresAt.Time,
+		MaxAge:   int(jwt.AccessTokenClaims.MaxAge),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: 3,
+	})
+	ctx.SetCookie(&http.Cookie{
+		Name:     "x-refresh-token",
+		Value:    jwt.RefreshToken,
+		Expires:  jwt.RefreshTokenClaims.ExpiresAt.Time,
+		MaxAge:   int(jwt.RefreshTokenClaims.MaxAge),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: 3,
+	})
+
+	return response.SuccessResponse(ctx, http.StatusOK, uc.formatUserResponse(user))
 }

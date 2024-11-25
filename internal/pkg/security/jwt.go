@@ -9,18 +9,19 @@ import (
 )
 
 type Claims struct {
-	ID          string `json:"id"`
-	Email       string `json:"email"`
-	DisplayName string `json:"displayName"`
-	UpdatedAt   string `json:"updatedAt"`
+	ID     string `json:"id"`
+	Email  string `json:"email"`
+	MaxAge uint   `json:"maxAge"`
 	jwt.RegisteredClaims
 }
 
-func GenerateUserToken(user *model.User, expiration time.Duration) (string, error) {
+func GenerateJwtToken(user *model.User, expiration uint) (*string, *Claims, error) {
 	claims := &Claims{
-		ID: user.IDHash,
+		ID:     user.IDHash,
+		Email:  user.Email,
+		MaxAge: expiration / 1000,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(expiration))),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
@@ -30,8 +31,8 @@ func GenerateUserToken(user *model.User, expiration time.Duration) (string, erro
 	signedToken, err := token.SignedString([]byte(os.Getenv("APP_SECRET_KEY")))
 	if err != nil {
 		println(err.Error())
-		return "", fmt.Errorf("failed to sign token: %w", err)
+		return nil, nil, fmt.Errorf("failed to sign token: %w", err)
 	}
 
-	return signedToken, nil
+	return &signedToken, claims, nil
 }

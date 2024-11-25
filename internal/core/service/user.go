@@ -6,7 +6,6 @@ import (
 	"orderbook/internal/adapter/database/postgres/repository"
 	"orderbook/internal/core/model"
 	"orderbook/internal/pkg/security"
-	"time"
 )
 
 type UserServiceError string
@@ -19,12 +18,14 @@ const (
 )
 
 type UserService struct {
-	resp *repository.UserRepository
+	resp          *repository.UserRepository
+	commonService *CommonService
 }
 
-func NewUserService(resp *repository.UserRepository) *UserService {
+func NewUserService(resp *repository.UserRepository, commonService *CommonService) *UserService {
 	return &UserService{
 		resp,
+		commonService,
 	}
 }
 
@@ -56,7 +57,41 @@ func (us *UserService) GetUserInformation(id string) (*model.User, error) {
 	return user, nil
 }
 
-func (us *UserService) UserLogin(email string, password string) (*model.User, *string, error) {
+type UserLoginToken struct {
+	AccessToken        string           `json:"accessToken"`
+	AccessTokenClaims  *security.Claims `json:"accessTokenClaims"`
+	RefreshToken       string           `json:"refreshToken"`
+	RefreshTokenClaims *security.Claims `json:"refreshTokenClaims"`
+}
+
+func (us *UserService) generateUserLoginToken(user *model.User) (*UserLoginToken, error) {
+	timeLimits, err := us.commonService.GetJwtTokenTimeLimit()
+	if err != nil {
+		slog.Info("Failed to get jwt token time limit", err)
+		return nil, errors.New(string(Unexpected))
+	}
+
+	accessToken, accessClaims, err := security.GenerateJwtToken(user, timeLimits.AccessTokenDuration)
+	if err != nil {
+		slog.Info("Failed to gen access time limit", err)
+		return nil, errors.New(string(Unexpected))
+	}
+	refreshToken, refreshClaims, err := security.GenerateJwtToken(user, timeLimits.RefreshTokenDuration)
+	if err != nil {
+		slog.Info("Failed to gen refresh time limit", err)
+		return nil, errors.New(string(Unexpected))
+	}
+
+	return &UserLoginToken{
+		*accessToken,
+		accessClaims,
+		*refreshToken,
+		refreshClaims,
+	}, nil
+
+}
+
+func (us *UserService) UserLogin(email string, password string) (*model.User, *UserLoginToken, error) {
 	user, err := us.resp.GetUserByEmail(email)
 	if err != nil {
 		slog.Info("Email not found %s", email)
@@ -69,12 +104,11 @@ func (us *UserService) UserLogin(email string, password string) (*model.User, *s
 		return nil, nil, errors.New(string(Unauthorized))
 	}
 
-	jwt, err := security.GenerateUserToken(user, time.Duration(15*60*1000))
+	jwt, err := us.generateUserLoginToken(user)
 	if err != nil {
 		slog.Info("Failed to generate token %s", email)
 		return nil, nil, errors.New(string(Unauthorized))
 	}
 
-	return user, &jwt, nil
-
+	return user, jwt, nil
 }

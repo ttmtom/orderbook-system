@@ -32,7 +32,7 @@ func main() {
 
 	pgConfig, err := config.NewMigration()
 	if err != nil {
-		slog.Error("Error on loading DB config", err)
+		slog.Error("Error on loading db config", err)
 		os.Exit(1)
 	}
 
@@ -51,7 +51,7 @@ func main() {
 		databaseURL,
 	)
 	if err != nil {
-		slog.Error("Error on DB connection", err)
+		slog.Error("Error on db connection", err)
 		os.Exit(1)
 	}
 
