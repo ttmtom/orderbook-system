@@ -2,7 +2,9 @@ package main
 
 import (
 	"log/slog"
+	"orderbook/internal/adapter/router/middleware"
 	"orderbook/internal/core/module"
+	"orderbook/internal/pkg/security"
 	"os"
 
 	"orderbook/config"
@@ -29,11 +31,15 @@ func main() {
 
 	v := validator.New()
 
+	security.InitJwtSecurity(c.AppConfig.SecurityKey)
+
 	moduleContainer := module.InitModuleContainer(db.DB, v)
+	middlewareContainer := middleware.InitMiddlewareContainer(moduleContainer)
 
 	r := router.NewRouter(
 		c.HttpConfig,
 		moduleContainer,
+		middlewareContainer,
 	)
 
 	err = r.Serve()

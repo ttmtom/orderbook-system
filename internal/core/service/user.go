@@ -58,10 +58,10 @@ func (us *UserService) GetUserInformation(id string) (*model.User, error) {
 }
 
 type UserLoginToken struct {
-	AccessToken        string           `json:"accessToken"`
-	AccessTokenClaims  *security.Claims `json:"accessTokenClaims"`
-	RefreshToken       string           `json:"refreshToken"`
-	RefreshTokenClaims *security.Claims `json:"refreshTokenClaims"`
+	AccessToken        string               `json:"accessToken"`
+	AccessTokenClaims  *security.UserClaims `json:"accessTokenClaims"`
+	RefreshToken       string               `json:"refreshToken"`
+	RefreshTokenClaims *security.UserClaims `json:"refreshTokenClaims"`
 }
 
 func (us *UserService) generateUserLoginToken(user *model.User) (*UserLoginToken, error) {
@@ -88,7 +88,6 @@ func (us *UserService) generateUserLoginToken(user *model.User) (*UserLoginToken
 		*refreshToken,
 		refreshClaims,
 	}, nil
-
 }
 
 func (us *UserService) UserLogin(email string, password string) (*model.User, *UserLoginToken, error) {

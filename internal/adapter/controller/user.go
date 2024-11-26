@@ -77,6 +77,7 @@ func (uc *UserController) GetUser(ctx echo.Context) error {
 		slog.Info("Validation Error", err.Error())
 		return err
 	}
+	//userClaims := ctx.Get("user-claims").(security.UserClaims)
 
 	user, err := uc.svc.GetUserInformation(req.ID)
 	if err != nil {
@@ -112,24 +113,20 @@ func (uc *UserController) Login(ctx echo.Context) error {
 		return response.FailureResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	ctx.SetCookie(&http.Cookie{
-		Name:     "x-access-token",
-		Value:    jwt.AccessToken,
-		Expires:  jwt.AccessTokenClaims.ExpiresAt.Time,
-		MaxAge:   int(jwt.AccessTokenClaims.MaxAge),
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: 3,
-	})
-	ctx.SetCookie(&http.Cookie{
-		Name:     "x-refresh-token",
-		Value:    jwt.RefreshToken,
-		Expires:  jwt.RefreshTokenClaims.ExpiresAt.Time,
-		MaxAge:   int(jwt.RefreshTokenClaims.MaxAge),
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: 3,
-	})
+	response.SetSecureCookies(
+		ctx,
+		"x-access-token",
+		jwt.AccessToken,
+		jwt.AccessTokenClaims.ExpiresAt.Time,
+		int(jwt.AccessTokenClaims.MaxAge),
+	)
+	response.SetSecureCookies(
+		ctx,
+		"x-refresh-token",
+		jwt.RefreshToken,
+		jwt.RefreshTokenClaims.ExpiresAt.Time,
+		int(jwt.RefreshTokenClaims.MaxAge),
+	)
 
 	return response.SuccessResponse(ctx, http.StatusOK, uc.formatUserResponse(user))
 }

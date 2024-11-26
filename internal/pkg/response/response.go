@@ -2,6 +2,8 @@ package response
 
 import (
 	"github.com/labstack/echo/v4"
+	"net/http"
+	"time"
 )
 
 type response struct {
@@ -29,4 +31,16 @@ func FailureResponse(code int, data ...any) error {
 	}
 
 	return echo.NewHTTPError(code, rsp)
+}
+
+func SetSecureCookies(ctx echo.Context, keyName string, value string, expires time.Time, maxAge int) {
+	ctx.SetCookie(&http.Cookie{
+		Name:     keyName,
+		Value:    value,
+		Expires:  expires,
+		MaxAge:   maxAge / 1000,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: 3,
+	})
 }

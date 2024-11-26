@@ -14,7 +14,7 @@ func NewCommonService(resp *repository.CommonRepository) *CommonService {
 	}
 }
 
-func (cs *CommonService) getAccessTokenTimeLimit() (uint, error) {
+func (cs *CommonService) GetAccessTokenTimeLimit() (uint, error) {
 	accessTimeLimit, err := cs.resp.GetTimeLimit("access_token")
 
 	if err != nil {
@@ -23,7 +23,7 @@ func (cs *CommonService) getAccessTokenTimeLimit() (uint, error) {
 	return accessTimeLimit.Time, nil
 }
 
-func (cs *CommonService) getRefreshTokenTimeLimit() (uint, error) {
+func (cs *CommonService) GetRefreshTokenTimeLimit() (uint, error) {
 	refreshTimeLimit, err := cs.resp.GetTimeLimit("refresh_token")
 
 	if err != nil {
@@ -38,12 +38,12 @@ type JwtTokenTimeLimit struct {
 }
 
 func (cs *CommonService) GetJwtTokenTimeLimit() (*JwtTokenTimeLimit, error) {
-	accessTokenTimeLimit, err := cs.getAccessTokenTimeLimit()
+	accessTokenTimeLimit, err := cs.GetAccessTokenTimeLimit()
 	if err != nil {
 		return nil, err
 	}
 
-	refreshTokenTimeLimit, err := cs.getRefreshTokenTimeLimit()
+	refreshTokenTimeLimit, err := cs.GetRefreshTokenTimeLimit()
 	if err != nil {
 		return nil, err
 	}
