@@ -3,13 +3,12 @@ package router
 import (
 	"github.com/labstack/echo/v4"
 	"orderbook/internal/adapter/controller"
-	"orderbook/internal/adapter/router/middleware"
 )
 
 func InitUserRoute(
 	e *echo.Echo,
-	midC *middleware.Container,
 	uc *controller.UserController,
+	midC *MiddlewareContainer,
 ) {
 	user := e.Group("/users")
 	{

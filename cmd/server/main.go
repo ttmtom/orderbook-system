@@ -2,7 +2,6 @@ package main
 
 import (
 	"log/slog"
-	"orderbook/internal/adapter/router/middleware"
 	"orderbook/internal/core/module"
 	"orderbook/internal/pkg/security"
 	"os"
@@ -34,7 +33,7 @@ func main() {
 	security.InitJwtSecurity(c.AppConfig.SecurityKey)
 
 	moduleContainer := module.InitModuleContainer(db.DB, v)
-	middlewareContainer := middleware.InitMiddlewareContainer(moduleContainer)
+	middlewareContainer := router.InitMiddlewareContainer(moduleContainer)
 
 	r := router.NewRouter(
 		c.HttpConfig,

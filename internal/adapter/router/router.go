@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"orderbook/config"
-	"orderbook/internal/adapter/router/middleware"
 	"orderbook/internal/core/module"
 )
 
@@ -21,7 +20,7 @@ type Handler interface {
 func NewRouter(
 	config *config.HttpConfig,
 	moduleContainer *module.Container,
-	middlewareContainer *middleware.Container,
+	middlewareContainer *MiddlewareContainer,
 ) *Router {
 	e := echo.New()
 	{
@@ -30,7 +29,7 @@ func NewRouter(
 		})
 	}
 
-	InitUserRoute(e, middlewareContainer, moduleContainer.UserModule.Controller)
+	InitUserRoute(e, moduleContainer.UserModule.Controller, middlewareContainer)
 
 	return &Router{e, config}
 }
