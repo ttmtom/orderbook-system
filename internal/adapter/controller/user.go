@@ -28,20 +28,24 @@ func NewUserController(validator *validator.Validate, svc *service.UserService) 
 }
 
 type useResponse struct {
-	ID          string    `json:"id"`
-	Email       string    `json:"email"`
-	DisplayName *string   `json:"displayName"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	DisplayName  *string   `json:"displayName"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+	LastLoginAt  time.Time `json:"lastLoginAt"`
+	LastAccessAt time.Time `json:"lastAccessAt"`
 }
 
 func (uc *UserController) formatUserResponse(user *model.User) *useResponse {
 	return &useResponse{
-		Email:       user.Email,
-		ID:          user.IDHash,
-		DisplayName: user.DisplayName,
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
+		Email:        user.Email,
+		ID:           user.IDHash,
+		DisplayName:  user.DisplayName,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		LastLoginAt:  user.LastLoginAt,
+		LastAccessAt: user.LastAccessAt,
 	}
 }
 
@@ -97,7 +101,7 @@ func (uc *UserController) Login(ctx echo.Context) error {
 		return err
 	}
 
-	user, jwt, err := uc.svc.UserLogin(req.Email, req.Password)
+	user, tokenSet, err := uc.svc.UserLogin(req.Email, req.Password)
 	if err != nil {
 		slog.Info("Error during login", err)
 
@@ -110,8 +114,14 @@ func (uc *UserController) Login(ctx echo.Context) error {
 	return response.SuccessResponse(ctx, http.StatusOK, map[string]any{
 		"user": uc.formatUserResponse(user),
 		"token": map[string]any{
-			"accessToken":  jwt.AccessToken,
-			"refreshToken": jwt.RefreshToken,
+			"accessToken":  tokenSet.AccessToken,
+			"refreshToken": tokenSet.RefreshToken,
 		},
 	})
 }
+
+//func (uc *UserController) RefreshToken(ctx echo.Context) error {
+//	userToken := ctx.Get("user").(*jwt.Token)
+//	userClaims := userToken.Claims.(*security.UserClaims)
+//
+//}

@@ -39,12 +39,20 @@ func (am *AuthMiddleware) HeaderAuthHandler() func(next echo.HandlerFunc) echo.H
 		})
 	}
 
+	successHandler := func(ctx echo.Context) {
+		userToken := ctx.Get("user").(*jwt.Token)
+		userClaims := userToken.Claims.(*security.UserClaims)
+
+		am.userService.UserAccess(userClaims)
+	}
+
 	mc := echojwt.Config{
 		ErrorHandler: errorHandler,
 		SigningKey:   []byte(am.appConfig.SecurityKey),
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(security.UserClaims)
 		},
+		SuccessHandler: successHandler,
 	}
 
 	return echojwt.WithConfig(mc)

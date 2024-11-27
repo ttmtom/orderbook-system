@@ -13,5 +13,7 @@ type User struct {
 	DisplayName  *string      `json:"displayName"`
 	CreatedAt    time.Time    `json:"createdAt"`
 	UpdatedAt    time.Time    `json:"updatedAt"`
+	LastLoginAt  time.Time    `json:"lastLoginAt"`
+	LastAccessAt time.Time    `json:"lastAccessAt"`
 	DeletedAt    sql.NullTime `gorm:"index" json:"deletedAt"`
 }

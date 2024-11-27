@@ -109,5 +109,11 @@ func (us *UserService) UserLogin(email string, password string) (*model.User, *U
 		return nil, nil, errors.New(string(Unauthorized))
 	}
 
+	us.resp.UpdateUserLoginAt(user)
+
 	return user, jwt, nil
+}
+
+func (us *UserService) UserAccess(user *security.UserClaims) {
+	us.resp.UpdateUserLastAccessAt(user.UserID)
 }

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"orderbook/internal/core/model"
 	"orderbook/internal/pkg/security"
+	"time"
 )
 
 type UserRepository struct {
@@ -102,4 +103,19 @@ func (ur *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	}
 
 	return user, nil
+}
+
+func (ur *UserRepository) UpdateUserLoginAt(user *model.User) {
+	ur.db.Model(&user).Updates(map[string]interface{}{
+		"last_login_at": time.Now(),
+	})
+}
+
+func (ur *UserRepository) UpdateUserLastAccessAt(userId string) {
+	ur.db.Model(&model.User{}).
+		Where("id_hash = ?", userId).
+		Updates(
+			map[string]interface{}{
+				"last_access_at": time.Now(),
+			})
 }
