@@ -5,19 +5,17 @@ import (
 	"orderbook/internal/adapter/controller"
 )
 
-func InitUserRoute(
+func InitUserRouter(
 	e *echo.Echo,
 	uc *controller.UserController,
 	midC *MiddlewareContainer,
 ) {
+	e.POST("/login", uc.Login)
+	e.POST("/register", uc.Register)
+
 	user := e.Group("/users")
 	{
-		user.POST("", uc.Register)
-		user.POST("/login", uc.Login)
-		authUser := user.Group("/")
-		{
-			authUser.Use(midC.AuthMiddleware)
-			authUser.GET(":idHash", uc.GetUser)
-		}
+		user.Use(midC.HeaderAuthMiddleware)
+		user.GET("", uc.GetUser)
 	}
 }

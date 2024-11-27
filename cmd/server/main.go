@@ -33,7 +33,7 @@ func main() {
 	security.InitJwtSecurity(c.AppConfig.SecurityKey)
 
 	moduleContainer := module.InitModuleContainer(db.DB, v)
-	middlewareContainer := router.InitMiddlewareContainer(moduleContainer)
+	middlewareContainer := router.InitMiddlewareContainer(c.AppConfig, moduleContainer)
 
 	r := router.NewRouter(
 		c.HttpConfig,

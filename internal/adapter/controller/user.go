@@ -2,8 +2,10 @@ package controller
 
 import (
 	"github.com/go-playground/validator"
+	"github.com/golang-jwt/jwt/v5"
 	"orderbook/internal/core/model"
 	"orderbook/internal/pkg/response"
+	"orderbook/internal/pkg/security"
 	"orderbook/pkg/utils"
 	"time"
 
@@ -67,21 +69,13 @@ func (uc *UserController) Register(ctx echo.Context) error {
 	return response.SuccessResponse(ctx, http.StatusOK, uc.formatUserResponse(user))
 }
 
-type getUserRequest struct {
-	ID string `param:"idHash" validate:"required,min=1" example:"1"`
-}
-
 func (uc *UserController) GetUser(ctx echo.Context) error {
-	req, err := utils.ValidateStruct(ctx, uc.validator, new(getUserRequest))
-	if err != nil {
-		slog.Info("Validation Error", err.Error())
-		return err
-	}
-	//userClaims := ctx.Get("user-claims").(security.UserClaims)
+	userToken := ctx.Get("user").(*jwt.Token)
+	userClaims := userToken.Claims.(*security.UserClaims)
 
-	user, err := uc.svc.GetUserInformation(req.ID)
+	user, err := uc.svc.GetUserInformation(userClaims.UserID)
 	if err != nil {
-		slog.Info("Error during registration", err)
+		slog.Info("Error on get user info", err)
 
 		if err.Error() == string(service.UserNotFound) {
 			return response.FailureResponse(http.StatusNotFound, err.Error())
@@ -113,20 +107,11 @@ func (uc *UserController) Login(ctx echo.Context) error {
 		return response.FailureResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	response.SetSecureCookies(
-		ctx,
-		"x-access-token",
-		jwt.AccessToken,
-		jwt.AccessTokenClaims.ExpiresAt.Time,
-		int(jwt.AccessTokenClaims.MaxAge),
-	)
-	response.SetSecureCookies(
-		ctx,
-		"x-refresh-token",
-		jwt.RefreshToken,
-		jwt.RefreshTokenClaims.ExpiresAt.Time,
-		int(jwt.RefreshTokenClaims.MaxAge),
-	)
-
-	return response.SuccessResponse(ctx, http.StatusOK, uc.formatUserResponse(user))
+	return response.SuccessResponse(ctx, http.StatusOK, map[string]any{
+		"user": uc.formatUserResponse(user),
+		"token": map[string]any{
+			"accessToken":  jwt.AccessToken,
+			"refreshToken": jwt.RefreshToken,
+		},
+	})
 }

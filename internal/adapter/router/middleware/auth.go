@@ -1,9 +1,12 @@
 package middleware
 
 import (
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
+	"orderbook/config"
 	"orderbook/internal/core/service"
 	"orderbook/internal/pkg/response"
 	"orderbook/internal/pkg/security"
@@ -12,13 +15,42 @@ import (
 type AuthMiddleware struct {
 	commonService *service.CommonService
 	userService   *service.UserService
+	appConfig     *config.AppConfig
 }
 
-func NewAuthMiddleware(commonService *service.CommonService, userService *service.UserService) *AuthMiddleware {
-	return &AuthMiddleware{commonService, userService}
+func NewAuthMiddleware(
+	config *config.AppConfig,
+	commonService *service.CommonService,
+	userService *service.UserService,
+) *AuthMiddleware {
+	return &AuthMiddleware{
+		commonService,
+		userService,
+		config,
+	}
 }
 
-func (am *AuthMiddleware) Handler(next echo.HandlerFunc) echo.HandlerFunc {
+func (am *AuthMiddleware) HeaderAuthHandler() func(next echo.HandlerFunc) echo.HandlerFunc {
+	errorHandler := func(c echo.Context, err error) error {
+		slog.Info("auth error", "err", err)
+		return response.FailureResponse(http.StatusUnauthorized, map[string]string{
+			"error":   "Invalid token",
+			"message": err.Error(),
+		})
+	}
+
+	mc := echojwt.Config{
+		ErrorHandler: errorHandler,
+		SigningKey:   []byte(am.appConfig.SecurityKey),
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(security.UserClaims)
+		},
+	}
+
+	return echojwt.WithConfig(mc)
+}
+
+func (am *AuthMiddleware) CookiesAuthHandler(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		accessToken, err := ctx.Cookie("x-access-token")
 		var token *security.UserClaims
