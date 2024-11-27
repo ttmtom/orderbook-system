@@ -12,6 +12,7 @@ func InitUserRouter(
 ) {
 	e.POST("/login", uc.Login)
 	e.POST("/register", uc.Register)
+	e.POST("/refreshToken", uc.RefreshToken)
 
 	user := e.Group("/users")
 	{

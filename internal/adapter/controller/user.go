@@ -98,7 +98,7 @@ func (uc *UserController) Login(ctx echo.Context) error {
 	req, err := utils.ValidateStruct(ctx, uc.validator, new(userLoginRequest))
 	if err != nil {
 		slog.Info("Validation Error", err.Error())
-		return err
+		return response.FailureResponse(http.StatusBadRequest, err.Error())
 	}
 
 	user, tokenSet, err := uc.svc.UserLogin(req.Email, req.Password)
@@ -120,8 +120,26 @@ func (uc *UserController) Login(ctx echo.Context) error {
 	})
 }
 
-//func (uc *UserController) RefreshToken(ctx echo.Context) error {
-//	userToken := ctx.Get("user").(*jwt.Token)
-//	userClaims := userToken.Claims.(*security.UserClaims)
-//
-//}
+type refreshRequest struct {
+	Token string `param:"token" validate:"required" example:"hi@example.com"`
+}
+
+func (uc *UserController) RefreshToken(ctx echo.Context) error {
+	req, err := utils.ValidateStruct(ctx, uc.validator, new(refreshRequest))
+	if err != nil {
+		slog.Info("Validation Error", err.Error())
+		return response.FailureResponse(http.StatusBadRequest, err.Error())
+	}
+
+	token, err := uc.svc.RefreshToken(req.Token)
+	if err != nil {
+		return response.FailureResponse(http.StatusBadRequest, err.Error())
+	}
+
+	return response.SuccessResponse(ctx, http.StatusOK, map[string]any{
+		"token": map[string]any{
+			"accessToken":  token.AccessToken,
+			"refreshToken": token.RefreshToken,
+		},
+	})
+}

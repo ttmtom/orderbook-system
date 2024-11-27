@@ -117,3 +117,31 @@ func (us *UserService) UserLogin(email string, password string) (*model.User, *U
 func (us *UserService) UserAccess(user *security.UserClaims) {
 	us.resp.UpdateUserLastAccessAt(user.UserID)
 }
+
+func (us *UserService) RefreshToken(token string) (*UserLoginToken, error) {
+	userClaims, err := security.ValidateJwtToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := us.resp.GetUserByIdHash(userClaims.UserID)
+
+	timeLimits, err := us.commonService.GetJwtTokenTimeLimit()
+	if err != nil {
+		slog.Info("Failed to get jwt token time limit", err)
+		return nil, errors.New(string(Unexpected))
+	}
+
+	accessToken, accessClaims, err := security.GenerateJwtToken(user, timeLimits.AccessTokenDuration)
+	if err != nil {
+		slog.Info("Failed to gen access time limit", err)
+		return nil, errors.New(string(Unexpected))
+	}
+
+	return &UserLoginToken{
+		AccessToken:        *accessToken,
+		AccessTokenClaims:  accessClaims,
+		RefreshToken:       token,
+		RefreshTokenClaims: userClaims,
+	}, nil
+}
