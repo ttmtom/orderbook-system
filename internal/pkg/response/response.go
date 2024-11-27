@@ -41,6 +41,6 @@ func SetSecureCookies(ctx echo.Context, keyName string, value string, expires ti
 		MaxAge:   maxAge / 1000,
 		Secure:   true,
 		HttpOnly: true,
-		SameSite: 3,
+		SameSite: http.SameSiteStrictMode,
 	})
 }

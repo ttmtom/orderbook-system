@@ -17,7 +17,7 @@ func InitUserRoute(
 		authUser := user.Group("/")
 		{
 			authUser.Use(midC.AuthMiddleware)
-			authUser.GET(":idHash", uc.GetUser)
+			authUser.GET("", uc.GetUser)
 		}
 	}
 }

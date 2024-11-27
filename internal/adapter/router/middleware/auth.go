@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
@@ -27,32 +28,32 @@ func (am *AuthMiddleware) Handler(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		var refreshToken *http.Cookie
 		if err != nil {
-			refreshToken, _ = ctx.Cookie("x-refresh-token")
+			refreshToken, err = ctx.Cookie("x-refresh-token")
 			if refreshToken == nil {
-				return response.FailureResponse(http.StatusUnauthorized, err)
+				return response.FailureResponse(http.StatusUnauthorized, errors.New("missing Token").Error())
 			}
 		}
 
 		if refreshToken != nil {
 			refreshToken, err := security.ValidateJwtToken(refreshToken.Value)
 			if err != nil {
-				return response.FailureResponse(http.StatusUnauthorized, err)
+				return response.FailureResponse(http.StatusUnauthorized, err.Error())
 			}
 			refreshTokenTimeLimit, err := am.commonService.GetAccessTokenTimeLimit()
 			if err != nil {
-				return response.FailureResponse(http.StatusUnauthorized, err)
+				return response.FailureResponse(http.StatusUnauthorized, err.Error())
 			}
 
 			user, err := am.userService.GetUserInformation(refreshToken.UserID)
 			if err != nil {
 				slog.Info("Failed to get user", err)
-				return response.FailureResponse(http.StatusUnauthorized, err)
+				return response.FailureResponse(http.StatusUnauthorized, err.Error())
 			}
 
 			newAccessToken, newToken, err := security.GenerateJwtToken(user, refreshTokenTimeLimit)
 			if err != nil {
 				slog.Info("Failed to gen access time limit", err)
-				return response.FailureResponse(http.StatusUnauthorized, err)
+				return response.FailureResponse(http.StatusUnauthorized, err.Error())
 			}
 			token = newToken
 			response.SetSecureCookies(
