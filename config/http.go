@@ -1,13 +1,15 @@
 package config
 
+import "os"
+
 type HttpConfig struct {
 	Host string
 	Port string
 }
 
-func LoadHttpConfig(envFile map[string]string) *HttpConfig {
+func LoadHttpConfig() *HttpConfig {
 	return &HttpConfig{
-		Host: envFile["HTTP_HOST"],
-		Port: envFile["HTTP_PORT"],
+		Host: os.Getenv("HTTP_HOST"),
+		Port: os.Getenv("HTTP_PORT"),
 	}
 }

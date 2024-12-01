@@ -11,7 +11,6 @@ type User struct {
 	Email        string       `gorm:"unique;not null" json:"email"`
 	PasswordHash string       `gorm:"not null" json:"passwordHash"`
 	DisplayName  *string      `json:"displayName"`
-	Wallets      []Wallet     `json:"wallets"`
 	CreatedAt    time.Time    `json:"createdAt"`
 	UpdatedAt    time.Time    `json:"updatedAt"`
 	LastLoginAt  time.Time    `json:"lastLoginAt"`

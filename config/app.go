@@ -1,14 +1,16 @@
 package config
 
+import "os"
+
 type AppConfig struct {
 	Env         string
 	SecurityKey string
 }
 
-func LoadAppConfig(envFile map[string]string) *AppConfig {
+func LoadAppConfig() *AppConfig {
 
 	return &AppConfig{
-		Env:         envFile["APP_ENV"],
-		SecurityKey: envFile["APP_SECRET_KEY"],
+		Env:         os.Getenv("APP_ENV"),
+		SecurityKey: os.Getenv("APP_SECRET_KEY"),
 	}
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/joho/godotenv"
 	"log/slog"
+	"os"
 )
 
 type Config struct {
@@ -11,17 +12,26 @@ type Config struct {
 	DatabaseConfig *DatabaseConfig
 }
 
+func loadEnv() error {
+	if os.Getenv("APP_ENV") == "" {
+		err := godotenv.Load()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func New() (*Config, error) {
-	envFile, envFileLoadingErr := godotenv.Read(".env")
-	if envFileLoadingErr != nil {
-		return nil, envFileLoadingErr
+	err := loadEnv()
+	if err != nil {
+		slog.Error("Error loading .env file", err)
+		return nil, err
 	}
 
-	slog.Info("Env File load successfully", "file", envFile)
-
-	appConfig := LoadAppConfig(envFile)
-	httpConfig := LoadHttpConfig(envFile)
-	databaseConfig := LoadConfig(envFile)
+	appConfig := LoadAppConfig()
+	httpConfig := LoadHttpConfig()
+	databaseConfig := LoadConfig()
 
 	return &Config{
 		appConfig,
@@ -31,12 +41,13 @@ func New() (*Config, error) {
 }
 
 func NewMigration() (*DatabaseConfig, error) {
-	envFile, envFileLoadingErr := godotenv.Read(".env")
-	if envFileLoadingErr != nil {
-		return nil, envFileLoadingErr
+	err := loadEnv()
+	if err != nil {
+		slog.Error("Error loading .env file", err)
+		return nil, err
 	}
 
-	postgresConfig := LoadConfig(envFile)
+	postgresConfig := LoadConfig()
 
 	return postgresConfig, nil
 }

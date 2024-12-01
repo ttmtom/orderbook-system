@@ -15,7 +15,6 @@ import (
 )
 
 func main() {
-	// init logger
 	logger.Init()
 
 	actionList := []string{"up", "down"}

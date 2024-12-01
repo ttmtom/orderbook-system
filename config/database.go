@@ -1,5 +1,7 @@
 package config
 
+import "os"
+
 type DatabaseConfig struct {
 	User     string
 	Password string
@@ -8,12 +10,12 @@ type DatabaseConfig struct {
 	DBName   string
 }
 
-func LoadConfig(envFile map[string]string) *DatabaseConfig {
+func LoadConfig() *DatabaseConfig {
 	return &DatabaseConfig{
-		User:     envFile["POSTGRES_USER"],
-		Password: envFile["POSTGRES_PASSWORD"],
-		Host:     envFile["POSTGRES_HOST"],
-		Port:     envFile["POSTGRES_PORT"],
-		DBName:   envFile["POSTGRES_DB"],
+		User:     os.Getenv("POSTGRES_USER"),
+		Password: os.Getenv("POSTGRES_PASSWORD"),
+		Host:     os.Getenv("POSTGRES_HOST"),
+		Port:     os.Getenv("POSTGRES_PORT"),
+		DBName:   os.Getenv("POSTGRES_DB"),
 	}
 }
