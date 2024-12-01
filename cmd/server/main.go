@@ -2,15 +2,14 @@ package main
 
 import (
 	"log/slog"
-	"orderbook/internal/core/module"
-	"orderbook/internal/pkg/security"
-	"os"
-
 	"orderbook/config"
 	"orderbook/internal/adapter/database/postgres"
 	"orderbook/internal/adapter/router"
+	"orderbook/internal/core/module"
+	"orderbook/internal/pkg/security"
 	"orderbook/internal/pkg/validator"
 	"orderbook/pkg/logger"
+	"os"
 )
 
 func main() {

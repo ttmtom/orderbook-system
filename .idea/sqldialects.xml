@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/internal/adapter/database/postgres/migration/000004_init_user_wallet.down.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/internal/adapter/database/postgres/migration/000004_init_user_wallet.up.sql" dialect="PostgreSQL" />
+  </component>
+</project>

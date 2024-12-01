@@ -3,16 +3,15 @@ package controller
 import (
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
+	"log/slog"
+	"net/http"
 	"orderbook/internal/core/model"
+	"orderbook/internal/core/service"
 	"orderbook/internal/pkg/response"
 	"orderbook/internal/pkg/security"
 	"orderbook/pkg/utils"
 	"time"
-
-	"github.com/labstack/echo/v4"
-	"log/slog"
-	"net/http"
-	"orderbook/internal/core/service"
 )
 
 type UserController struct {
@@ -101,7 +100,7 @@ func (uc *UserController) Login(ctx echo.Context) error {
 		return response.FailureResponse(http.StatusBadRequest, err.Error())
 	}
 
-	user, tokenSet, err := uc.svc.UserLogin(req.Email, req.Password)
+	_, tokenSet, err := uc.svc.UserLogin(req.Email, req.Password)
 	if err != nil {
 		slog.Info("Error during login", err)
 
@@ -111,12 +110,9 @@ func (uc *UserController) Login(ctx echo.Context) error {
 		return response.FailureResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	return response.SuccessResponse(ctx, http.StatusOK, map[string]any{
-		"user": uc.formatUserResponse(user),
-		"token": map[string]any{
-			"accessToken":  tokenSet.AccessToken,
-			"refreshToken": tokenSet.RefreshToken,
-		},
+	return response.SuccessResponse(ctx, http.StatusOK, map[string]string{
+		"accessToken":  tokenSet.AccessToken,
+		"refreshToken": tokenSet.RefreshToken,
 	})
 }
 
@@ -136,10 +132,8 @@ func (uc *UserController) RefreshToken(ctx echo.Context) error {
 		return response.FailureResponse(http.StatusBadRequest, err.Error())
 	}
 
-	return response.SuccessResponse(ctx, http.StatusOK, map[string]any{
-		"token": map[string]any{
-			"accessToken":  token.AccessToken,
-			"refreshToken": token.RefreshToken,
-		},
+	return response.SuccessResponse(ctx, http.StatusOK, map[string]string{
+		"accessToken":  token.AccessToken,
+		"refreshToken": token.RefreshToken,
 	})
 }

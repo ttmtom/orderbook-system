@@ -1,5 +1,4 @@
 BEGIN;
-
     CREATE TABLE "users" (
         "id" SERIAL PRIMARY KEY,
         "id_hash" VARCHAR UNIQUE NOT NULL,
