@@ -18,20 +18,20 @@ func main() {
 	c, err := config.New()
 	if err != nil {
 		slog.Error("Error loading configuration:", err)
-		os.Exit(1)
+		panic(err)
 	}
 
 	db, err := postgres.New(*c.DatabaseConfig)
 	if err != nil {
 		slog.Error("Error on database connection", err)
-		os.Exit(1)
+		panic(err)
 	}
 
 	v := validator.New()
 
 	security.InitJwtSecurity(c.AppConfig.SecurityKey)
 
-	moduleContainer := module.InitModuleContainer(db.DB, v)
+	moduleContainer := module.InitModuleContainer(db.DB, v, c)
 	middlewareContainer := router.InitMiddlewareContainer(c.AppConfig, moduleContainer)
 
 	r := router.NewRouter(

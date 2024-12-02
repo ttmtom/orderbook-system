@@ -9,3 +9,25 @@ services:
         volumes:
             - ./.data/db:/var/lib/postgresql/data
         env_file: "./.env"
+
+    zoo:
+        image: confluentinc/cp-zookeeper:7.7.0
+        hostname: zoo
+        container_name: zoo
+        ports:
+            - "2181:2181"
+        env_file: "./.env"
+
+    kafka:
+        image: confluentinc/cp-kafka:7.7.0
+        hostname: kafka
+        container_name: kafka
+        ports:
+            - "9092:9092"
+            - "29092:29092"
+            - "9999:9999"
+        environment:
+            KAFKA_JMX_HOSTNAME: ${DOCKER_HOST_IP:-127:0:0:1}
+        depends_on:
+            - zoo
+        env_file: "./.env"

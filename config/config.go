@@ -10,6 +10,7 @@ type Config struct {
 	AppConfig      *AppConfig
 	HttpConfig     *HttpConfig
 	DatabaseConfig *DatabaseConfig
+	KafkaConfig    *KafkaConfig
 }
 
 func loadEnv() error {
@@ -32,11 +33,13 @@ func New() (*Config, error) {
 	appConfig := LoadAppConfig()
 	httpConfig := LoadHttpConfig()
 	databaseConfig := LoadConfig()
+	kafkaConfig := LoadKafkaConfig()
 
 	return &Config{
 		appConfig,
 		httpConfig,
 		databaseConfig,
+		kafkaConfig,
 	}, nil
 }
 

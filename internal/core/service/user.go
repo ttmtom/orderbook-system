@@ -1,11 +1,14 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"log/slog"
 	"orderbook/internal/adapter/database/postgres/repository"
 	"orderbook/internal/core/model"
 	"orderbook/internal/pkg/security"
+	"strings"
 )
 
 type UserServiceError string
@@ -20,13 +23,24 @@ const (
 type UserService struct {
 	resp          *repository.UserRepository
 	commonService *CommonService
+	producer      *kafka.Producer
 }
 
-func NewUserService(resp *repository.UserRepository, commonService *CommonService) *UserService {
+func NewUserService(
+	resp *repository.UserRepository,
+	commonService *CommonService,
+	producer *kafka.Producer,
+) *UserService {
+
 	return &UserService{
 		resp,
 		commonService,
+		producer,
 	}
+}
+
+type UserRegistrationSuccessEvent struct {
+	ID uint `json:"id"`
 }
 
 func (us *UserService) UserRegistration(email string, password string) (*model.User, error) {
@@ -45,7 +59,34 @@ func (us *UserService) UserRegistration(email string, password string) (*model.U
 		PasswordHash: hashedPWD,
 	}
 
-	return us.resp.CreateUser(user)
+	user, err = us.resp.CreateUser(user)
+	if err != nil {
+		return nil, errors.New(string(Unexpected))
+	}
+
+	event := UserRegistrationSuccessEvent{
+		ID: user.ID,
+	}
+	eventData, err := json.Marshal(event)
+	if err != nil {
+		slog.Error("Failed to marshal event data", "error", err)
+		return nil, errors.New(string(Unexpected))
+	}
+
+	topic := strings.Join([]string{"user", "registration", "success"}, "-")
+
+	err = us.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{
+			Topic:     &topic,
+			Partition: kafka.PartitionAny,
+		},
+		Value: eventData,
+	}, nil)
+	if err != nil {
+		slog.Error("Failed to produce Kafka message", "err", err)
+	}
+
+	return user, nil
 }
 
 func (us *UserService) GetUserInformation(id string) (*model.User, error) {

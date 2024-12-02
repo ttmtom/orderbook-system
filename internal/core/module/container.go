@@ -3,6 +3,7 @@ package module
 import (
 	"github.com/go-playground/validator"
 	"gorm.io/gorm"
+	"orderbook/config"
 )
 
 type Container struct {
@@ -10,9 +11,13 @@ type Container struct {
 	CommonModule *CommonModule
 }
 
-func InitModuleContainer(connection *gorm.DB, validator *validator.Validate) *Container {
+func InitModuleContainer(
+	connection *gorm.DB,
+	validator *validator.Validate,
+	config *config.Config,
+) *Container {
 	commonModule := NewCommonModule(connection)
-	userModule := NewUserModule(connection, validator, commonModule)
+	userModule := NewUserModule(connection, validator, commonModule, config)
 
 	return &Container{
 		userModule,
