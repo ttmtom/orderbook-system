@@ -63,7 +63,7 @@ func (am *AuthMiddleware) CookiesAuthHandler(next echo.HandlerFunc) echo.Handler
 		accessToken, err := ctx.Cookie("x-access-token")
 		var token *security.UserClaims
 		if accessToken != nil {
-			token, err = security.ValidateJwtToken(accessToken.Value)
+			token, err = security.ValidateJwtToken(accessToken.Value, security.AccessToken)
 		}
 		var refreshToken *http.Cookie
 		if err != nil {
@@ -74,7 +74,7 @@ func (am *AuthMiddleware) CookiesAuthHandler(next echo.HandlerFunc) echo.Handler
 		}
 
 		if refreshToken != nil {
-			refreshToken, err := security.ValidateJwtToken(refreshToken.Value)
+			refreshToken, err := security.ValidateJwtToken(refreshToken.Value, security.RefreshToken)
 			if err != nil {
 				return response.FailureResponse(http.StatusUnauthorized, err)
 			}
@@ -89,7 +89,7 @@ func (am *AuthMiddleware) CookiesAuthHandler(next echo.HandlerFunc) echo.Handler
 				return response.FailureResponse(http.StatusUnauthorized, err)
 			}
 
-			newAccessToken, newToken, err := security.GenerateJwtToken(user, refreshTokenTimeLimit)
+			newAccessToken, newToken, err := security.GenerateJwtToken(user, refreshTokenTimeLimit, security.AccessToken)
 			if err != nil {
 				slog.Info("Failed to gen access time limit", err)
 				return response.FailureResponse(http.StatusUnauthorized, err)

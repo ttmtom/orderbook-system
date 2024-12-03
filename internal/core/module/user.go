@@ -26,7 +26,8 @@ func NewUserModule(
 	config *config.Config,
 ) *UserModule {
 	userProducer, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": config.KafkaConfig.Brokers,
+		"bootstrap.servers":        config.KafkaConfig.Brokers,
+		"allow.auto.create.topics": true, // @TODO update it for prod
 	})
 	if err != nil {
 		slog.Info("Init User module error", "err", err)

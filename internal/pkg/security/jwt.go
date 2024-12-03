@@ -8,10 +8,18 @@ import (
 	"time"
 )
 
+type JWTTokenType string
+
+const (
+	AccessToken  JWTTokenType = "accessToken"
+	RefreshToken JWTTokenType = "refreshToken"
+)
+
 type UserClaims struct {
-	UserID string `json:"id"`
-	Email  string `json:"email"`
-	MaxAge uint   `json:"maxAge"`
+	UserID string       `json:"id"`
+	Email  string       `json:"email"`
+	MaxAge uint         `json:"maxAge"`
+	Type   JWTTokenType `json:"type"`
 	jwt.RegisteredClaims
 }
 
@@ -27,11 +35,12 @@ func InitJwtSecurity(secretKey string) {
 	}
 }
 
-func GenerateJwtToken(user *model.User, expiration uint) (*string, *UserClaims, error) {
+func GenerateJwtToken(user *model.User, expiration uint, tokenType JWTTokenType) (*string, *UserClaims, error) {
 	claims := &UserClaims{
 		user.IDHash,
 		user.Email,
 		expiration,
+		tokenType,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(expiration) * time.Second)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -49,7 +58,7 @@ func GenerateJwtToken(user *model.User, expiration uint) (*string, *UserClaims, 
 	return &signedToken, claims, nil
 }
 
-func ValidateJwtToken(tokenString string) (*UserClaims, error) {
+func ValidateJwtToken(tokenString string, tokenType JWTTokenType) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			slog.Info("Invalid token method")
@@ -59,7 +68,7 @@ func ValidateJwtToken(tokenString string) (*UserClaims, error) {
 	})
 
 	user, ok := token.Claims.(*UserClaims)
-	if !ok || !token.Valid {
+	if !ok || !token.Valid || user.Type != tokenType {
 		slog.Info("Error on Validate token", "err", ok, "token", token)
 		return nil, err
 	}

@@ -5,9 +5,9 @@ BEGIN;
         "password_hash" VARCHAR NOT NULL,
         "email" VARCHAR UNIQUE NOT NULL,
         "display_name" VARCHAR(255),
-        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        "deleted_at" TIMESTAMP
+        "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        "deleted_at" TIMESTAMPTZ
     );
 
     CREATE UNIQUE INDEX "user_email" ON "users" ("email");
