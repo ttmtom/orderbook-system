@@ -50,6 +50,6 @@ func (m *Manager) PublishEvent(topic string, event any) error {
 	return nil
 }
 
-func (m *Manager) SubscriptEvent(topic string, handler func(event any)) {
+func (m *Manager) SetupConsumer(topic string, handler func(event any)) {
 
 }

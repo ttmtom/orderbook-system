@@ -34,7 +34,11 @@ func NewRouter(
 		})
 	}
 
-	InitUserRouter(e, moduleContainer.UserModule.Controller, middlewareContainer)
+	InitUserRouter(
+		e,
+		moduleContainer.UserModule.Controller,
+		middlewareContainer,
+	)
 
 	return &Router{e, config}
 }
