@@ -10,6 +10,6 @@ func NewWalletService(repo *repository.WalletRepository) *WalletService {
 	return &WalletService{repo: repo}
 }
 
-func (ws *WalletService) OnUserRegistrationSuccess() {
+func (ws *WalletService) OnUserRegistrationSuccess(event any) {
 
 }

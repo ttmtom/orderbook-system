@@ -8,13 +8,24 @@ import (
 )
 
 type WalletModule struct {
-	Repository *repository.WalletRepository
-	Service    *service.WalletService
+	Repository    *repository.WalletRepository
+	Service       *service.WalletService
+	KafkaConsumer *kafka.ConsumerGroup
 }
 
-func NewWalletModule(connection *gorm.DB, kafkaManager *kafka.Manager) *WalletModule {
+func NewWalletModule(
+	connection *gorm.DB,
+	kafkaManager *kafka.Manager,
+	userModule *UserModule,
+) *WalletModule {
 	wr := repository.NewWalletRepository(connection)
 	ws := service.NewWalletService(wr)
 
-	return &WalletModule{wr, ws}
+	eventMap := make(map[string]func(event any))
+
+	eventMap[string(service.UserRegistrationSuccess)] = ws.OnUserRegistrationSuccess
+
+	consumer := kafkaManager.SetUpGroupConsumer("wallet", eventMap)
+
+	return &WalletModule{wr, ws, consumer}
 }

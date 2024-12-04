@@ -9,7 +9,8 @@ import (
 
 type Manager struct {
 	producer    *kafka.Producer
-	consumerMap map[string]*kafka.Consumer
+	consumerMap map[string]*ConsumerGroup
+	config      *config.KafkaConfig
 }
 
 func NewKafkaManager(
@@ -24,9 +25,9 @@ func NewKafkaManager(
 		panic(err)
 	}
 
-	consumerMap := make(map[string]*kafka.Consumer)
+	consumerMap := make(map[string]*ConsumerGroup)
 
-	return &Manager{producer, consumerMap}
+	return &Manager{producer, consumerMap, config.KafkaConfig}
 }
 
 func (m *Manager) PublishEvent(topic string, event any) error {
@@ -50,6 +51,25 @@ func (m *Manager) PublishEvent(topic string, event any) error {
 	return nil
 }
 
-func (m *Manager) SetupConsumer(topic string, handler func(event any)) {
+func (m *Manager) CloseAll() {
+	for _, consumer := range m.consumerMap {
+		consumer.StopPolling()
+	}
+}
 
+func (m *Manager) StartPolling() {
+	for _, consumer := range m.consumerMap {
+		consumer.StartPolling()
+	}
+}
+
+func (m *Manager) SetUpGroupConsumer(
+	group string,
+	topicMap map[string]func(event any),
+) *ConsumerGroup {
+	c := NewConsumerGroup(group, topicMap, m.config)
+
+	m.consumerMap[group] = c
+
+	return c
 }

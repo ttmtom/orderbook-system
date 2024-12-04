@@ -22,7 +22,6 @@ func NewUserModule(
 	commonModule *CommonModule,
 	kafkaManager *kafka.Manager,
 ) *UserModule {
-
 	userRepository := repository.NewUserRepository(connection)
 	userService := service.NewUserService(
 		userRepository,

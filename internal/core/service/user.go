@@ -7,7 +7,12 @@ import (
 	"orderbook/internal/adapter/kafka"
 	"orderbook/internal/core/model"
 	"orderbook/internal/pkg/security"
-	"strings"
+)
+
+type UserEventTopic string
+
+const (
+	UserRegistrationSuccess UserEventTopic = "user-registration-success"
 )
 
 type UserServiceError string
@@ -66,9 +71,7 @@ func (us *UserService) UserRegistration(email string, password string) (*model.U
 		ID: user.ID,
 	}
 
-	topic := strings.Join([]string{"user", "registration", "success"}, "-")
-
-	err = us.kafkaManager.PublishEvent(topic, event)
+	err = us.kafkaManager.PublishEvent(string(UserRegistrationSuccess), event)
 	if err != nil {
 		slog.Error("Failed to marshal event data", "error", err)
 		return nil, errors.New(string(Unexpected))
