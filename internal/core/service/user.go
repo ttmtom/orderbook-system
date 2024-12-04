@@ -1,11 +1,10 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"log/slog"
 	"orderbook/internal/adapter/database/postgres/repository"
+	"orderbook/internal/adapter/kafka"
 	"orderbook/internal/core/model"
 	"orderbook/internal/pkg/security"
 	"strings"
@@ -21,21 +20,21 @@ const (
 )
 
 type UserService struct {
-	resp          *repository.UserRepository
+	repo          *repository.UserRepository
 	commonService *CommonService
-	producer      *kafka.Producer
+	kafkaManager  *kafka.Manager
 }
 
 func NewUserService(
 	resp *repository.UserRepository,
 	commonService *CommonService,
-	producer *kafka.Producer,
+	kafkaManager *kafka.Manager,
 ) *UserService {
 
 	return &UserService{
 		resp,
 		commonService,
-		producer,
+		kafkaManager,
 	}
 }
 
@@ -44,7 +43,7 @@ type UserRegistrationSuccessEvent struct {
 }
 
 func (us *UserService) UserRegistration(email string, password string) (*model.User, error) {
-	if us.resp.IsUserExist(email) {
+	if us.repo.IsUserExist(email) {
 		return nil, errors.New(string(EmailAlreadyExist))
 	}
 
@@ -59,7 +58,7 @@ func (us *UserService) UserRegistration(email string, password string) (*model.U
 		PasswordHash: hashedPWD,
 	}
 
-	user, err = us.resp.CreateUser(user)
+	user, err = us.repo.CreateUser(user)
 	if err != nil {
 		return nil, errors.New(string(Unexpected))
 	}
@@ -67,30 +66,19 @@ func (us *UserService) UserRegistration(email string, password string) (*model.U
 	event := UserRegistrationSuccessEvent{
 		ID: user.ID,
 	}
-	eventData, err := json.Marshal(event)
+
+	topic := strings.Join([]string{"user", "registration", "success"}, "-")
+
+	err = us.kafkaManager.PublishEvent(topic, event)
 	if err != nil {
 		slog.Error("Failed to marshal event data", "error", err)
 		return nil, errors.New(string(Unexpected))
 	}
-
-	topic := strings.Join([]string{"user", "registration", "success"}, "-")
-
-	err = us.producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{
-			Topic:     &topic,
-			Partition: kafka.PartitionAny,
-		},
-		Value: eventData,
-	}, nil)
-	if err != nil {
-		slog.Error("Failed to produce Kafka message", "err", err)
-	}
-
 	return user, nil
 }
 
 func (us *UserService) GetUserInformation(id string) (*model.User, error) {
-	user, err := us.resp.GetUserByIdHash(id)
+	user, err := us.repo.GetUserByIdHash(id)
 	if err != nil {
 		return nil, errors.New(string(UserNotFound))
 	}
@@ -132,7 +120,7 @@ func (us *UserService) generateUserLoginToken(user *model.User) (*UserLoginToken
 }
 
 func (us *UserService) UserLogin(email string, password string) (*model.User, *UserLoginToken, error) {
-	user, err := us.resp.GetUserByEmail(email)
+	user, err := us.repo.GetUserByEmail(email)
 	if err != nil {
 		slog.Info("Email not found %s", email)
 		return nil, nil, errors.New(string(Unauthorized))
@@ -150,13 +138,13 @@ func (us *UserService) UserLogin(email string, password string) (*model.User, *U
 		return nil, nil, errors.New(string(Unauthorized))
 	}
 
-	us.resp.UpdateUserLoginAt(user)
+	us.repo.UpdateUserLoginAt(user)
 
 	return user, jwt, nil
 }
 
 func (us *UserService) UserAccess(user *security.UserClaims) {
-	us.resp.UpdateUserLastAccessAt(user.UserID)
+	us.repo.UpdateUserLastAccessAt(user.UserID)
 }
 
 func (us *UserService) RefreshToken(token string) (*UserLoginToken, error) {
@@ -165,7 +153,7 @@ func (us *UserService) RefreshToken(token string) (*UserLoginToken, error) {
 		return nil, err
 	}
 
-	user, err := us.resp.GetUserByIdHash(userClaims.UserID)
+	user, err := us.repo.GetUserByIdHash(userClaims.UserID)
 
 	timeLimits, err := us.commonService.GetJwtTokenTimeLimit()
 	if err != nil {

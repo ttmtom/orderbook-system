@@ -1,34 +1,55 @@
 package kafka
 
 import (
+	"encoding/json"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"log/slog"
 	"orderbook/config"
 )
 
-type Kafka struct {
-	Consumer *kafka.Consumer
-	Producer *kafka.Producer
+type Manager struct {
+	producer    *kafka.Producer
+	consumerMap map[string]*kafka.Consumer
 }
 
-func NewProducer(config config.KafkaConfig) (*kafka.Producer, error) {
+func NewKafkaManager(
+	config *config.Config,
+) *Manager {
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": config.Brokers,
+		"bootstrap.servers":        config.KafkaConfig.Brokers,
+		"allow.auto.create.topics": true, // @TODO update it for prod
 	})
 	if err != nil {
+		slog.Info("Init User module error", "err", err)
 		panic(err)
 	}
 
-	return producer, nil
+	consumerMap := make(map[string]*kafka.Consumer)
+
+	return &Manager{producer, consumerMap}
 }
 
-func NewConsumer(config config.KafkaConfig) (*kafka.Consumer, error) {
-	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost:9092",
-		"group.id":          "myGroup",
-		"auto.offset.reset": "earliest",
-	})
+func (m *Manager) PublishEvent(topic string, event any) error {
+	slog.Info("Publish event", "topic", topic, "event", event)
+	eventData, err := json.Marshal(event)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	return consumer, nil
+	err = m.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{
+			Topic:     &topic,
+			Partition: kafka.PartitionAny,
+		},
+		Value: eventData,
+	}, nil)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Manager) SubscriptEvent(topic string, handler func(event any)) {
+
 }

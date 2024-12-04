@@ -11,7 +11,7 @@ type Postgres struct {
 	DB *gorm.DB
 }
 
-func New(config config.DatabaseConfig) (*Postgres, error) {
+func New(config config.DatabaseConfig) *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		config.Host,
 		config.User,
@@ -23,9 +23,7 @@ func New(config config.DatabaseConfig) (*Postgres, error) {
 	PostgresDb, dbOpenErr := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if dbOpenErr != nil {
-		return nil, dbOpenErr
+		panic(dbOpenErr)
 	}
-	return &Postgres{
-		DB: PostgresDb,
-	}, nil
+	return PostgresDb
 }

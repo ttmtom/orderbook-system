@@ -23,11 +23,11 @@ func loadEnv() error {
 	return nil
 }
 
-func New() (*Config, error) {
+func New() *Config {
 	err := loadEnv()
 	if err != nil {
 		slog.Error("Error loading .env file", err)
-		return nil, err
+		panic(err)
 	}
 
 	appConfig := LoadAppConfig()
@@ -40,7 +40,7 @@ func New() (*Config, error) {
 		httpConfig,
 		databaseConfig,
 		kafkaConfig,
-	}, nil
+	}
 }
 
 func NewMigration() (*DatabaseConfig, error) {

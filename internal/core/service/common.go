@@ -5,7 +5,7 @@ import (
 )
 
 type CommonService struct {
-	resp *repository.CommonRepository
+	repo *repository.CommonRepository
 }
 
 func NewCommonService(resp *repository.CommonRepository) *CommonService {
@@ -15,7 +15,7 @@ func NewCommonService(resp *repository.CommonRepository) *CommonService {
 }
 
 func (cs *CommonService) GetAccessTokenTimeLimit() (uint, error) {
-	accessTimeLimit, err := cs.resp.GetTimeLimit("access_token")
+	accessTimeLimit, err := cs.repo.GetTimeLimit("access_token")
 
 	if err != nil {
 		return 0, err
@@ -24,7 +24,7 @@ func (cs *CommonService) GetAccessTokenTimeLimit() (uint, error) {
 }
 
 func (cs *CommonService) GetRefreshTokenTimeLimit() (uint, error) {
-	refreshTimeLimit, err := cs.resp.GetTimeLimit("refresh_token")
+	refreshTimeLimit, err := cs.repo.GetTimeLimit("refresh_token")
 
 	if err != nil {
 		return 0, err
