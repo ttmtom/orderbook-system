@@ -30,7 +30,6 @@ func NewUserService(
 	commonService *CommonService,
 	kafkaManager *kafka.Manager,
 ) *UserService {
-
 	return &UserService{
 		resp,
 		commonService,
@@ -84,93 +83,4 @@ func (us *UserService) GetUserInformation(id string) (*model.User, error) {
 	}
 
 	return user, nil
-}
-
-type UserLoginToken struct {
-	AccessToken        string               `json:"accessToken"`
-	AccessTokenClaims  *security.UserClaims `json:"accessTokenClaims"`
-	RefreshToken       string               `json:"refreshToken"`
-	RefreshTokenClaims *security.UserClaims `json:"refreshTokenClaims"`
-}
-
-func (us *UserService) generateUserLoginToken(user *model.User) (*UserLoginToken, error) {
-	timeLimits, err := us.commonService.GetJwtTokenTimeLimit()
-	if err != nil {
-		slog.Info("Failed to get jwt token time limit", err)
-		return nil, errors.New(string(Unexpected))
-	}
-
-	accessToken, accessClaims, err := security.GenerateJwtToken(user, timeLimits.AccessTokenDuration, security.AccessToken)
-	if err != nil {
-		slog.Info("Failed to gen access time limit", err)
-		return nil, errors.New(string(Unexpected))
-	}
-	refreshToken, refreshClaims, err := security.GenerateJwtToken(user, timeLimits.RefreshTokenDuration, security.AccessToken)
-	if err != nil {
-		slog.Info("Failed to gen refresh time limit", err)
-		return nil, errors.New(string(Unexpected))
-	}
-
-	return &UserLoginToken{
-		*accessToken,
-		accessClaims,
-		*refreshToken,
-		refreshClaims,
-	}, nil
-}
-
-func (us *UserService) UserLogin(email string, password string) (*model.User, *UserLoginToken, error) {
-	user, err := us.repo.GetUserByEmail(email)
-	if err != nil {
-		slog.Info("Email not found %s", email)
-		return nil, nil, errors.New(string(Unauthorized))
-	}
-
-	err = security.ComparePassword(password, user.PasswordHash)
-	if err != nil {
-		slog.Info("Password not match %s", email)
-		return nil, nil, errors.New(string(Unauthorized))
-	}
-
-	jwt, err := us.generateUserLoginToken(user)
-	if err != nil {
-		slog.Info("Failed to generate token %s", email)
-		return nil, nil, errors.New(string(Unauthorized))
-	}
-
-	us.repo.UpdateUserLoginAt(user)
-
-	return user, jwt, nil
-}
-
-func (us *UserService) UserAccess(user *security.UserClaims) {
-	us.repo.UpdateUserLastAccessAt(user.UserID)
-}
-
-func (us *UserService) RefreshToken(token string) (*UserLoginToken, error) {
-	userClaims, err := security.ValidateJwtToken(token, security.RefreshToken)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := us.repo.GetUserByIdHash(userClaims.UserID)
-
-	timeLimits, err := us.commonService.GetJwtTokenTimeLimit()
-	if err != nil {
-		slog.Info("Failed to get jwt token time limit", err)
-		return nil, errors.New(string(Unexpected))
-	}
-
-	accessToken, accessClaims, err := security.GenerateJwtToken(user, timeLimits.AccessTokenDuration, security.AccessToken)
-	if err != nil {
-		slog.Info("Failed to gen access time limit", err)
-		return nil, errors.New(string(Unexpected))
-	}
-
-	return &UserLoginToken{
-		AccessToken:        *accessToken,
-		AccessTokenClaims:  accessClaims,
-		RefreshToken:       token,
-		RefreshTokenClaims: userClaims,
-	}, nil
 }

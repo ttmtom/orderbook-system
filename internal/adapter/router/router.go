@@ -21,7 +21,6 @@ type Handler interface {
 func NewRouter(
 	config *config.HttpConfig,
 	moduleContainer *module.Container,
-	middlewareContainer *MiddlewareContainer,
 ) *Router {
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -37,7 +36,11 @@ func NewRouter(
 	InitUserRouter(
 		e,
 		moduleContainer.UserModule.Controller,
-		middlewareContainer,
+		moduleContainer.AuthModule.Middleware,
+	)
+	InitAuthRouter(
+		e,
+		moduleContainer.AuthModule.Controller,
 	)
 
 	return &Router{e, config}

@@ -22,12 +22,10 @@ func main() {
 
 	security.InitJwtSecurity(c.AppConfig.SecurityKey)
 	moduleContainer := module.InitModuleContainer(db, v, c, km)
-	middlewareContainer := router.InitMiddlewareContainer(c.AppConfig, moduleContainer)
 
 	r := router.NewRouter(
 		c.HttpConfig,
 		moduleContainer,
-		middlewareContainer,
 	)
 
 	err := r.Serve()
