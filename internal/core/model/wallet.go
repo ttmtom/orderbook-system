@@ -5,13 +5,14 @@ import "time"
 type CryptoCurrency string
 
 const (
-	BTC CryptoCurrency = "btc"
-	ETH CryptoCurrency = "eth"
+	BTC CryptoCurrency = "BTC"
+	ETH CryptoCurrency = "ETH"
 )
 
 type Wallet struct {
-	ID       uint `gorm:"primarykey" json:"id"`
-	User     User
+	ID       uint           `gorm:"primarykey" json:"id"`
+	UserID   uint           `gorm:"foreignKey:User;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	User     User           `gorm:"foreignkey:UserID"`
 	Currency CryptoCurrency `gorm:"unique;not null" json:"currency"`
 	Balance  float64        `gorm:"not null" json:"balance"`
 

@@ -90,6 +90,21 @@ func (ur *UserRepository) GetUserByIdHash(id string) (*model.User, error) {
 	return user, nil
 }
 
+func (ur *UserRepository) GetUserById(id uint) (*model.User, error) {
+	var user *model.User
+	result := ur.db.Model(&model.User{}).
+		Select("*").
+		Where("id = ?", id).
+		First(&user)
+
+	if result.Error != nil {
+		slog.Info("Error on getting user by id", result.Error)
+		return nil, result.Error
+	}
+
+	return user, nil
+}
+
 func (ur *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	var user *model.User
 	result := ur.db.Model(&model.User{}).
@@ -98,7 +113,7 @@ func (ur *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 		First(&user)
 
 	if result.Error != nil {
-		slog.Info("Error on getting user by id", result.Error)
+		slog.Info("Error on getting user by email", result.Error)
 		return nil, result.Error
 	}
 

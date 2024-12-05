@@ -87,3 +87,11 @@ func (us *UserService) GetUserInformation(id string) (*model.User, error) {
 
 	return user, nil
 }
+
+func (us *UserService) GetUserById(id uint) (*model.User, error) {
+	user, err := us.repo.GetUserById(id)
+	if err != nil {
+		return nil, errors.New(string(UserNotFound))
+	}
+	return user, nil
+}

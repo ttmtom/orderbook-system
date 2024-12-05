@@ -65,9 +65,11 @@ func (m *Manager) StartPolling() {
 
 func (m *Manager) SetUpGroupConsumer(
 	group string,
-	topicMap map[string]func(event any),
+	topicMap map[string]func(event []byte) error,
+	pollingInterval int,
+	retry int,
 ) *ConsumerGroup {
-	c := NewConsumerGroup(group, topicMap, m.config)
+	c := NewConsumerGroup(group, topicMap, m.config, pollingInterval, retry)
 
 	m.consumerMap[group] = c
 

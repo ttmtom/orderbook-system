@@ -19,13 +19,13 @@ func NewWalletModule(
 	userModule *UserModule,
 ) *WalletModule {
 	wr := repository.NewWalletRepository(connection)
-	ws := service.NewWalletService(wr)
+	ws := service.NewWalletService(wr, userModule.Service)
 
-	eventMap := make(map[string]func(event any))
+	eventMap := make(map[string]func(event []byte) error)
 
 	eventMap[string(service.UserRegistrationSuccess)] = ws.OnUserRegistrationSuccess
 
-	consumer := kafkaManager.SetUpGroupConsumer("wallet", eventMap)
+	consumer := kafkaManager.SetUpGroupConsumer("wallet", eventMap, 500, 5)
 
 	return &WalletModule{wr, ws, consumer}
 }

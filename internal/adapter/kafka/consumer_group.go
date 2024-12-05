@@ -1,24 +1,28 @@
 package kafka
 
 import (
-	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"log/slog"
 	"orderbook/config"
-	"os"
+	"time"
 )
 
 type ConsumerGroup struct {
-	consumer *kafka.Consumer
-	eventMap map[string]func(event any)
+	consumer        *kafka.Consumer
+	eventMap        map[string]func(event []byte) error
+	Group           string
+	PollingInterval int
+	Retry           int
 }
 
 var run = false
 
 func NewConsumerGroup(
 	group string,
-	topicMap map[string]func(event any),
+	topicMap map[string]func(event []byte) error,
 	config *config.KafkaConfig,
+	pollingInterval int,
+	retry int,
 ) *ConsumerGroup {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":        config.Brokers,
@@ -44,39 +48,67 @@ func NewConsumerGroup(
 		panic(err.Error())
 	}
 
-	return &ConsumerGroup{c, topicMap}
+	return &ConsumerGroup{
+		c,
+		topicMap,
+		group,
+		pollingInterval,
+		retry,
+	}
+}
+
+func (cg *ConsumerGroup) processMessage(topic string, event []byte) error {
+	handler, ok := cg.eventMap[topic]
+	if !ok {
+		slog.Error("Event handler not exist", "topic", topic)
+		return nil
+	}
+
+	slog.Info("event handling")
+
+	var err error
+	for attempt := 0; attempt < cg.Retry; attempt++ {
+		err = handler(event)
+		if err == nil {
+			break
+		} else {
+			time.Sleep(time.Duration(cg.PollingInterval))
+		}
+	}
+
+	return err
 }
 
 func (cg *ConsumerGroup) StartPolling() {
 	run = true
 	go func() {
 		for run {
-			ev := cg.consumer.Poll(100)
+			ev := cg.consumer.Poll(cg.PollingInterval)
 			if ev == nil {
 				continue
 			}
 
 			switch e := ev.(type) {
 			case *kafka.Message:
-				fmt.Printf("%% Message on %s:\n%s\n",
-					e.TopicPartition, string(e.Value))
-				if e.Headers != nil {
-					fmt.Printf("%% Headers: %v\n", e.Headers)
+				slog.Info("Event received", "group", cg.Group, "topic", *e.TopicPartition.Topic, "event", e.Value, "header", e.Headers)
+				if e.TopicPartition.Topic == nil {
+					slog.Error("Topic is nil")
+					break
 				}
-				break
+				go func() {
+					err := cg.processMessage(*e.TopicPartition.Topic, e.Value)
+					if err != nil {
+						slog.Info("Event done")
+						cg.consumer.CommitMessage(e)
+					}
+				}()
 			case kafka.Error:
-				// Errors should generally be considered
-				// informational, the client will try to
-				// automatically recover.
-				// But in this example we choose to terminate
-				// the application if all brokers are down.
-				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
+				slog.Error("Kafka Error", "group", cg.Group, "code", e.Code(), "error", e.Error())
 				if e.Code() == kafka.ErrAllBrokersDown {
-					run = false
+					cg.StopPolling()
 				}
-				break
 			default:
-				fmt.Printf("Ignored %v\n", e)
+				slog.Info("Ignored Event", "group", cg.Group, "event", e)
 			}
 		}
 	}()
@@ -85,4 +117,5 @@ func (cg *ConsumerGroup) StartPolling() {
 func (cg *ConsumerGroup) StopPolling() {
 	run = false
 	cg.consumer.Close()
+	slog.Info("Consumer stop", "group", cg.Group)
 }
