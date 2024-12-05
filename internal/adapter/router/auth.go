@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"orderbook/internal/adapter/controller"
+	"orderbook/internal/adapter/router/controller"
 )
 
 func InitAuthRouter(

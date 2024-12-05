@@ -3,20 +3,19 @@ package module
 import (
 	"gorm.io/gorm"
 	"orderbook/internal/adapter/database/postgres/repository"
-	"orderbook/internal/core/service"
 )
 
 type CommonModule struct {
 	Repository *repository.CommonRepository
-	Service    *service.CommonService
+	//Service    *service.CommonService
 }
 
 func NewCommonModule(connection *gorm.DB) *CommonModule {
 	resp := repository.NewCommonRepository(connection)
-	svc := service.NewCommonService(resp)
+	//svc := service.NewCommonService(resp)
 
 	return &CommonModule{
 		Repository: resp,
-		Service:    svc,
+		//Service:    svc,
 	}
 }

@@ -25,19 +25,16 @@ const (
 )
 
 type UserService struct {
-	repo          *repository.UserRepository
-	commonService *CommonService
-	kafkaManager  *kafka.Manager
+	repo         *repository.UserRepository
+	kafkaManager *kafka.Manager
 }
 
 func NewUserService(
 	resp *repository.UserRepository,
-	commonService *CommonService,
 	kafkaManager *kafka.Manager,
 ) *UserService {
 	return &UserService{
 		resp,
-		commonService,
 		kafkaManager,
 	}
 }

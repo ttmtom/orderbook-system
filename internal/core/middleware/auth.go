@@ -13,18 +13,18 @@ import (
 )
 
 type AuthMiddleware struct {
-	commonService *service.CommonService
-	authService   *service.AuthService
-	appConfig     *config.AppConfig
+	//commonService *service.CommonService
+	authService *service.AuthService
+	appConfig   *config.AppConfig
 }
 
 func NewAuthMiddleware(
 	config *config.AppConfig,
-	commonService *service.CommonService,
+	//commonService *service.CommonService,
 	authService *service.AuthService,
 ) *AuthMiddleware {
 	return &AuthMiddleware{
-		commonService,
+		//commonService,
 		authService,
 		config,
 	}

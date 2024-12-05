@@ -16,10 +16,9 @@ type WalletModule struct {
 func NewWalletModule(
 	connection *gorm.DB,
 	kafkaManager *kafka.Manager,
-	userModule *UserModule,
 ) *WalletModule {
 	wr := repository.NewWalletRepository(connection)
-	ws := service.NewWalletService(wr, userModule.Service)
+	ws := service.NewWalletService(wr)
 
 	eventMap := make(map[string]func(event []byte) error)
 

@@ -21,9 +21,9 @@ func InitModuleContainer(
 	kafkaManager *kafka.Manager,
 ) *Container {
 	commonModule := NewCommonModule(connection)
-	userModule := NewUserModule(connection, validator, commonModule, kafkaManager)
-	authModule := NewAuthModule(config.AppConfig, validator, commonModule, userModule)
-	walletModule := NewWalletModule(connection, kafkaManager, userModule)
+	userModule := NewUserModule(connection, validator, kafkaManager)
+	authModule := NewAuthModule(config.AppConfig, validator, commonModule.Repository, userModule.Repository)
+	walletModule := NewWalletModule(connection, kafkaManager)
 
 	return &Container{
 		userModule,

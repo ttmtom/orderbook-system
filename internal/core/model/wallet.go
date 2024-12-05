@@ -15,6 +15,7 @@ type Wallet struct {
 	User     User           `gorm:"foreignkey:UserID"`
 	Currency CryptoCurrency `gorm:"unique;not null" json:"currency"`
 	Balance  float64        `gorm:"not null" json:"balance"`
+	Locked   float64        `gorm:"not null" json:"locked"`
 
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`

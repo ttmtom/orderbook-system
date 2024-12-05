@@ -3,9 +3,9 @@ package module
 import (
 	"github.com/go-playground/validator"
 	"gorm.io/gorm"
-	"orderbook/internal/adapter/controller"
 	"orderbook/internal/adapter/database/postgres/repository"
 	"orderbook/internal/adapter/kafka"
+	"orderbook/internal/adapter/router/controller"
 	"orderbook/internal/core/service"
 )
 
@@ -19,13 +19,11 @@ type UserModule struct {
 func NewUserModule(
 	connection *gorm.DB,
 	validator *validator.Validate,
-	commonModule *CommonModule,
 	kafkaManager *kafka.Manager,
 ) *UserModule {
 	userRepository := repository.NewUserRepository(connection)
 	userService := service.NewUserService(
 		userRepository,
-		commonModule.Service,
 		kafkaManager,
 	)
 	userController := controller.NewUserController(validator, userService)

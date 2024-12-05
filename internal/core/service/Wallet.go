@@ -8,17 +8,14 @@ import (
 )
 
 type WalletService struct {
-	repo        *repository.WalletRepository
-	userService *UserService
+	repo *repository.WalletRepository
 }
 
 func NewWalletService(
 	repo *repository.WalletRepository,
-	userService *UserService,
 ) *WalletService {
 	return &WalletService{
 		repo,
-		userService,
 	}
 }
 
@@ -31,14 +28,8 @@ func (ws *WalletService) OnUserRegistrationSuccess(event []byte) error {
 		return err
 	}
 
-	user, err := ws.userService.GetUserById(data.ID)
-	if err != nil {
-		slog.Info("failed on get user", "data", data, "err", err)
-		return err
-	}
-
 	btcWallet := &model.Wallet{
-		User:     *user,
+		UserID:   data.ID,
 		Currency: model.BTC,
 	}
 	btcWallet, err = ws.repo.CreateWallet(btcWallet)
@@ -49,7 +40,7 @@ func (ws *WalletService) OnUserRegistrationSuccess(event []byte) error {
 	}
 
 	ethWallet := &model.Wallet{
-		User:     *user,
+		UserID:   data.ID,
 		Currency: model.ETH,
 	}
 	ethWallet, err = ws.repo.CreateWallet(ethWallet)
