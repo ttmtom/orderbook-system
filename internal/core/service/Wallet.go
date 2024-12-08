@@ -3,17 +3,17 @@ package service
 import (
 	"encoding/json"
 	"log/slog"
-	"orderbook/internal/adapter/database/postgres/repository"
 	"orderbook/internal/core/model"
+	"orderbook/internal/core/port"
 )
 
 type WalletService struct {
-	repo *repository.WalletRepository
+	repo port.WalletRepository
 }
 
 func NewWalletService(
-	repo *repository.WalletRepository,
-) *WalletService {
+	repo port.WalletRepository,
+) port.WalletService {
 	return &WalletService{
 		repo,
 	}

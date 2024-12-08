@@ -5,17 +5,18 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"log/slog"
 	"orderbook/config"
+	"orderbook/internal/core/port"
 )
 
-type Manager struct {
+type EventRepository struct {
 	producer    *kafka.Producer
-	consumerMap map[string]*ConsumerGroup
+	consumerMap map[string]port.ConsumerGroup
 	config      *config.KafkaConfig
 }
 
-func NewKafkaManager(
+func New(
 	config *config.Config,
-) *Manager {
+) port.EventRepository {
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers":        config.KafkaConfig.Brokers,
 		"allow.auto.create.topics": true, // @TODO update it for prod
@@ -25,12 +26,12 @@ func NewKafkaManager(
 		panic(err)
 	}
 
-	consumerMap := make(map[string]*ConsumerGroup)
+	consumerMap := make(map[string]port.ConsumerGroup)
 
-	return &Manager{producer, consumerMap, config.KafkaConfig}
+	return &EventRepository{producer, consumerMap, config.KafkaConfig}
 }
 
-func (m *Manager) PublishEvent(topic string, event any) error {
+func (m *EventRepository) PublishEvent(topic string, event any) error {
 	slog.Info("Publish event", "topic", topic, "event", event)
 	eventData, err := json.Marshal(event)
 	if err != nil {
@@ -51,27 +52,29 @@ func (m *Manager) PublishEvent(topic string, event any) error {
 	return nil
 }
 
-func (m *Manager) CloseAll() {
+func (m *EventRepository) CloseAll() {
 	for _, consumer := range m.consumerMap {
 		consumer.StopPolling()
 	}
 }
 
-func (m *Manager) StartPolling() {
+func (m *EventRepository) StartPolling() {
 	for _, consumer := range m.consumerMap {
 		consumer.StartPolling()
 	}
 }
 
-func (m *Manager) SetUpGroupConsumer(
+func (m *EventRepository) SetUpGroupConsumer(
 	group string,
 	topicMap map[string]func(event []byte) error,
 	pollingInterval int,
 	retry int,
-) *ConsumerGroup {
+) port.ConsumerGroup {
 	c := NewConsumerGroup(group, topicMap, m.config, pollingInterval, retry)
 
 	m.consumerMap[group] = c
 
 	return c
 }
+
+var _ port.EventRepository = (*EventRepository)(nil)

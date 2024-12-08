@@ -4,10 +4,8 @@ import (
 	"log/slog"
 	"orderbook/config"
 	"orderbook/internal/adapter/database/postgres"
-	"orderbook/internal/adapter/kafka"
 	"orderbook/internal/adapter/router"
 	"orderbook/internal/core/module"
-	"orderbook/internal/pkg/security"
 	"orderbook/internal/pkg/validator"
 	"orderbook/pkg/logger"
 	"os"
@@ -23,11 +21,9 @@ func main() {
 
 	c := config.New()
 	db := postgres.New(*c.DatabaseConfig)
-	km := kafka.NewKafkaManager(c)
 	v := validator.New()
 
-	security.InitJwtSecurity(c.AppConfig.SecurityKey)
-	moduleContainer := module.InitModuleContainer(db, v, c, km)
+	moduleContainer := module.InitModuleContainer(db, v, c)
 
 	r := router.NewRouter(
 		c.HttpConfig,
@@ -41,9 +37,9 @@ func main() {
 			panic(err)
 		}
 	}()
-	km.StartPolling()
+	moduleContainer.EventModule.StartPolling()
 
 	<-quit
 	slog.Info("Shutting down server...")
-	km.CloseAll()
+	moduleContainer.EventModule.CloseAll()
 }

@@ -3,31 +3,24 @@ package service
 import (
 	"errors"
 	"log/slog"
-	"orderbook/internal/adapter/database/postgres/repository"
 	"orderbook/internal/core/model"
+	"orderbook/internal/core/port"
 	"orderbook/internal/pkg/security"
 )
 
 type AuthService struct {
-	commonRepository *repository.CommonRepository
-	userRepository   *repository.UserRepository
+	commonRepository port.CommonRepository
+	userRepository   port.UserRepository
 }
 
 func NewAuthService(
-	commonRepository *repository.CommonRepository,
-	userRepository *repository.UserRepository,
-) *AuthService {
+	commonRepository port.CommonRepository,
+	userRepository port.UserRepository,
+) port.AuthService {
 	return &AuthService{
 		commonRepository,
 		userRepository,
 	}
-}
-
-type UserLoginToken struct {
-	AccessToken        string               `json:"accessToken"`
-	AccessTokenClaims  *security.UserClaims `json:"accessTokenClaims"`
-	RefreshToken       string               `json:"refreshToken"`
-	RefreshTokenClaims *security.UserClaims `json:"refreshTokenClaims"`
 }
 
 func (as *AuthService) getTimeLimit(id string, c chan *model.TimeLimit) {
@@ -40,7 +33,7 @@ func (as *AuthService) getTimeLimit(id string, c chan *model.TimeLimit) {
 	close(c)
 }
 
-func (as *AuthService) generateUserLoginToken(user *model.User) (*UserLoginToken, error) {
+func (as *AuthService) generateUserLoginToken(user *model.User) (*port.UserLoginToken, error) {
 	accessChannel := make(chan *model.TimeLimit)
 	refreshChannel := make(chan *model.TimeLimit)
 
@@ -65,15 +58,15 @@ func (as *AuthService) generateUserLoginToken(user *model.User) (*UserLoginToken
 		return nil, errors.New(string(Unexpected))
 	}
 
-	return &UserLoginToken{
-		*accessToken,
-		accessClaims,
-		*refreshToken,
-		refreshClaims,
+	return &port.UserLoginToken{
+		AccessToken:        *accessToken,
+		AccessTokenClaims:  accessClaims,
+		RefreshToken:       *refreshToken,
+		RefreshTokenClaims: refreshClaims,
 	}, nil
 }
 
-func (as *AuthService) UserLogin(email string, password string) (*model.User, *UserLoginToken, error) {
+func (as *AuthService) UserLogin(email string, password string) (*model.User, *port.UserLoginToken, error) {
 	user, err := as.userRepository.GetUserByEmail(email)
 	if err != nil {
 		slog.Info("Email not found %s", email)
@@ -101,7 +94,7 @@ func (as *AuthService) UserAccess(user *security.UserClaims) {
 	as.userRepository.UpdateUserLastAccessAt(user.UserID)
 }
 
-func (as *AuthService) RefreshToken(token string) (*UserLoginToken, error) {
+func (as *AuthService) RefreshToken(token string) (*port.UserLoginToken, error) {
 	userClaims, err := security.ValidateJwtToken(token, security.RefreshToken)
 	if err != nil {
 		return nil, err
@@ -121,7 +114,7 @@ func (as *AuthService) RefreshToken(token string) (*UserLoginToken, error) {
 		return nil, errors.New(string(Unexpected))
 	}
 
-	return &UserLoginToken{
+	return &port.UserLoginToken{
 		AccessToken:        *accessToken,
 		AccessTokenClaims:  accessClaims,
 		RefreshToken:       token,

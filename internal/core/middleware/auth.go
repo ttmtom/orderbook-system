@@ -7,22 +7,22 @@ import (
 	"log/slog"
 	"net/http"
 	"orderbook/config"
-	"orderbook/internal/core/service"
+	"orderbook/internal/core/port"
 	"orderbook/internal/pkg/response"
 	"orderbook/internal/pkg/security"
 )
 
 type AuthMiddleware struct {
 	//commonService *service.CommonService
-	authService *service.AuthService
+	authService port.AuthService
 	appConfig   *config.AppConfig
 }
 
 func NewAuthMiddleware(
 	config *config.AppConfig,
 	//commonService *service.CommonService,
-	authService *service.AuthService,
-) *AuthMiddleware {
+	authService port.AuthService,
+) port.AuthMiddleware {
 	return &AuthMiddleware{
 		//commonService,
 		authService,

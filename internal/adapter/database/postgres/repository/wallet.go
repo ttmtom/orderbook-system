@@ -3,13 +3,14 @@ package repository
 import (
 	"gorm.io/gorm"
 	"orderbook/internal/core/model"
+	"orderbook/internal/core/port"
 )
 
 type WalletRepository struct {
 	db *gorm.DB
 }
 
-func NewWalletRepository(db *gorm.DB) *WalletRepository {
+func NewWalletRepository(db *gorm.DB) port.WalletRepository {
 	return &WalletRepository{db: db}
 }
 

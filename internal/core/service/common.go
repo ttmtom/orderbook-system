@@ -1,14 +1,14 @@
 package service
 
 import (
-	"orderbook/internal/adapter/database/postgres/repository"
+	"orderbook/internal/core/port"
 )
 
 type CommonService struct {
-	repo *repository.CommonRepository
+	repo port.CommonRepository
 }
 
-func NewCommonService(resp *repository.CommonRepository) *CommonService {
+func NewCommonService(resp port.CommonRepository) *CommonService {
 	return &CommonService{
 		resp,
 	}

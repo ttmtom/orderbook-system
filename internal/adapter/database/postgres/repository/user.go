@@ -4,6 +4,7 @@ import (
 	"gorm.io/gorm"
 	"log/slog"
 	"orderbook/internal/core/model"
+	"orderbook/internal/core/port"
 	"orderbook/internal/pkg/security"
 	"time"
 )
@@ -12,7 +13,7 @@ type UserRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) *UserRepository {
+func NewUserRepository(db *gorm.DB) port.UserRepository {
 	return &UserRepository{
 		db,
 	}

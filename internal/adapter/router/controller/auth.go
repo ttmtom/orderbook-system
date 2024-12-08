@@ -5,17 +5,18 @@ import (
 	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
+	"orderbook/internal/core/port"
 	"orderbook/internal/core/service"
 	"orderbook/internal/pkg/response"
 	"orderbook/pkg/utils"
 )
 
 type AuthController struct {
-	svc       *service.AuthService
+	svc       port.AuthService
 	validator *validator.Validate
 }
 
-func NewAuthController(validator *validator.Validate, svc *service.AuthService) *AuthController {
+func NewAuthController(validator *validator.Validate, svc port.AuthService) port.AuthController {
 	return &AuthController{
 		svc:       svc,
 		validator: validator,

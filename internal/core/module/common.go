@@ -3,10 +3,11 @@ package module
 import (
 	"gorm.io/gorm"
 	"orderbook/internal/adapter/database/postgres/repository"
+	"orderbook/internal/core/port"
 )
 
 type CommonModule struct {
-	Repository *repository.CommonRepository
+	Repository port.CommonRepository
 	//Service    *service.CommonService
 }
 

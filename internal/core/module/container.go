@@ -4,10 +4,11 @@ import (
 	"github.com/go-playground/validator"
 	"gorm.io/gorm"
 	"orderbook/config"
-	"orderbook/internal/adapter/kafka"
+	"orderbook/internal/pkg/security"
 )
 
 type Container struct {
+	EventModule  *EventModule
 	UserModule   *UserModule
 	CommonModule *CommonModule
 	WalletModule *WalletModule
@@ -18,14 +19,17 @@ func InitModuleContainer(
 	connection *gorm.DB,
 	validator *validator.Validate,
 	config *config.Config,
-	kafkaManager *kafka.Manager,
 ) *Container {
+	security.InitJwtSecurity(config.AppConfig.SecurityKey)
+
+	eventModule := NewEventModule(config)
 	commonModule := NewCommonModule(connection)
-	userModule := NewUserModule(connection, validator, kafkaManager)
+	userModule := NewUserModule(connection, validator, eventModule.Repository)
 	authModule := NewAuthModule(config.AppConfig, validator, commonModule.Repository, userModule.Repository)
-	walletModule := NewWalletModule(connection, kafkaManager)
+	walletModule := NewWalletModule(connection, eventModule.Repository)
 
 	return &Container{
+		eventModule,
 		userModule,
 		commonModule,
 		walletModule,

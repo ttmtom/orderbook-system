@@ -4,6 +4,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"log/slog"
 	"orderbook/config"
+	"orderbook/internal/core/port"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type ConsumerGroup struct {
 	Retry           int
 }
 
-var run = false
+var running = false
 
 func NewConsumerGroup(
 	group string,
@@ -23,7 +24,7 @@ func NewConsumerGroup(
 	config *config.KafkaConfig,
 	pollingInterval int,
 	retry int,
-) *ConsumerGroup {
+) port.ConsumerGroup {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":        config.Brokers,
 		"group.id":                 group,
@@ -80,9 +81,9 @@ func (cg *ConsumerGroup) processMessage(topic string, event []byte) error {
 }
 
 func (cg *ConsumerGroup) StartPolling() {
-	run = true
+	running = true
 	go func() {
-		for run {
+		for running {
 			ev := cg.consumer.Poll(cg.PollingInterval)
 			if ev == nil {
 				continue
@@ -115,7 +116,9 @@ func (cg *ConsumerGroup) StartPolling() {
 }
 
 func (cg *ConsumerGroup) StopPolling() {
-	run = false
+	running = false
 	cg.consumer.Close()
 	slog.Info("Consumer stop", "group", cg.Group)
 }
+
+var _ port.ConsumerGroup = (*ConsumerGroup)(nil)

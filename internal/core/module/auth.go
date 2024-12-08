@@ -3,23 +3,23 @@ package module
 import (
 	"github.com/go-playground/validator"
 	"orderbook/config"
-	"orderbook/internal/adapter/database/postgres/repository"
 	"orderbook/internal/adapter/router/controller"
 	"orderbook/internal/core/middleware"
+	"orderbook/internal/core/port"
 	"orderbook/internal/core/service"
 )
 
 type AuthModule struct {
-	Controller *controller.AuthController
-	Service    *service.AuthService
-	Middleware *middleware.AuthMiddleware
+	Controller port.AuthController
+	Service    port.AuthService
+	Middleware port.AuthMiddleware
 }
 
 func NewAuthModule(
 	config *config.AppConfig,
 	validator *validator.Validate,
-	commonRepo *repository.CommonRepository,
-	userRepo *repository.UserRepository,
+	commonRepo port.CommonRepository,
+	userRepo port.UserRepository,
 ) *AuthModule {
 	as := service.NewAuthService(commonRepo, userRepo)
 	ac := controller.NewAuthController(validator, as)

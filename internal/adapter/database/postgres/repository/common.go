@@ -4,13 +4,14 @@ import (
 	"gorm.io/gorm"
 	"log/slog"
 	"orderbook/internal/core/model"
+	"orderbook/internal/core/port"
 )
 
 type CommonRepository struct {
 	db *gorm.DB
 }
 
-func NewCommonRepository(db *gorm.DB) *CommonRepository {
+func NewCommonRepository(db *gorm.DB) port.CommonRepository {
 	return &CommonRepository{
 		db,
 	}

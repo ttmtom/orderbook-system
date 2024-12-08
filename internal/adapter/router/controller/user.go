@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"orderbook/internal/core/model"
+	"orderbook/internal/core/port"
 	"orderbook/internal/core/service"
 	"orderbook/internal/pkg/response"
 	"orderbook/internal/pkg/security"
@@ -15,11 +16,11 @@ import (
 )
 
 type UserController struct {
-	svc       *service.UserService
+	svc       port.UserService
 	validator *validator.Validate
 }
 
-func NewUserController(validator *validator.Validate, svc *service.UserService) *UserController {
+func NewUserController(validator *validator.Validate, svc port.UserService) port.UserController {
 	return &UserController{
 		svc,
 		validator,
@@ -72,7 +73,7 @@ func (uc *UserController) Register(ctx echo.Context) error {
 	return response.SuccessResponse(ctx, http.StatusOK, uc.formatUserResponse(user))
 }
 
-func (uc *UserController) GetUser(ctx echo.Context) error {
+func (uc *UserController) GetMe(ctx echo.Context) error {
 	userToken := ctx.Get("user").(*jwt.Token)
 	userClaims := userToken.Claims.(*security.UserClaims)
 

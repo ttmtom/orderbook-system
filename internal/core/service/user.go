@@ -3,9 +3,8 @@ package service
 import (
 	"errors"
 	"log/slog"
-	"orderbook/internal/adapter/database/postgres/repository"
-	"orderbook/internal/adapter/kafka"
 	"orderbook/internal/core/model"
+	"orderbook/internal/core/port"
 	"orderbook/internal/pkg/security"
 )
 
@@ -25,17 +24,17 @@ const (
 )
 
 type UserService struct {
-	repo         *repository.UserRepository
-	kafkaManager *kafka.Manager
+	repo         port.UserRepository
+	eventManager port.EventRepository
 }
 
 func NewUserService(
-	resp *repository.UserRepository,
-	kafkaManager *kafka.Manager,
-) *UserService {
+	resp port.UserRepository,
+	eventManager port.EventRepository,
+) port.UserService {
 	return &UserService{
 		resp,
-		kafkaManager,
+		eventManager,
 	}
 }
 
@@ -68,7 +67,7 @@ func (us *UserService) UserRegistration(email string, password string) (*model.U
 		ID: user.ID,
 	}
 
-	err = us.kafkaManager.PublishEvent(string(UserRegistrationSuccess), event)
+	err = us.eventManager.PublishEvent(string(UserRegistrationSuccess), event)
 	if err != nil {
 		slog.Error("Failed to marshal event data", "error", err)
 		return nil, errors.New(string(Unexpected))

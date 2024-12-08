@@ -3,19 +3,18 @@ package module
 import (
 	"gorm.io/gorm"
 	"orderbook/internal/adapter/database/postgres/repository"
-	"orderbook/internal/adapter/kafka"
+	"orderbook/internal/core/port"
 	"orderbook/internal/core/service"
 )
 
 type WalletModule struct {
-	Repository    *repository.WalletRepository
-	Service       *service.WalletService
-	KafkaConsumer *kafka.ConsumerGroup
+	Repository port.WalletRepository
+	Service    port.WalletService
 }
 
 func NewWalletModule(
 	connection *gorm.DB,
-	kafkaManager *kafka.Manager,
+	eventManager port.EventRepository,
 ) *WalletModule {
 	wr := repository.NewWalletRepository(connection)
 	ws := service.NewWalletService(wr)
@@ -24,7 +23,10 @@ func NewWalletModule(
 
 	eventMap[string(service.UserRegistrationSuccess)] = ws.OnUserRegistrationSuccess
 
-	consumer := kafkaManager.SetUpGroupConsumer("wallet", eventMap, 500, 5)
+	eventManager.SetUpGroupConsumer("wallet", eventMap, 500, 5)
 
-	return &WalletModule{wr, ws, consumer}
+	return &WalletModule{
+		wr,
+		ws,
+	}
 }
