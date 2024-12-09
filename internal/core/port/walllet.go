@@ -11,10 +11,11 @@ type WalletRepository interface {
 
 type WalletService interface {
 	OnUserRegistrationSuccess(event []byte) error
+	GetWalletsByUserID(userID string) ([]*model.Wallet, error)
 }
 
 type WalletController interface {
 	Deposit(ctx echo.Context) error
-	Withdraw(ctx echo.Context) error
+	Withdrawal(ctx echo.Context) error
 	GetMe(ctx echo.Context) error
 }

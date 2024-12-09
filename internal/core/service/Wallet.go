@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"orderbook/internal/core/model"
 	"orderbook/internal/core/port"
@@ -49,4 +50,8 @@ func (ws *WalletService) OnUserRegistrationSuccess(event []byte) error {
 		return err
 	}
 	return err
+}
+
+func (ws *WalletService) GetWalletsByUserID(userId string) ([]*model.Wallet, error) {
+	return nil, errors.New("TODO")
 }
