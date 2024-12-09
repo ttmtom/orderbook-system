@@ -3,6 +3,7 @@ package module
 import (
 	"gorm.io/gorm"
 	"orderbook/internal/adapter/database/postgres/repository"
+	"orderbook/internal/adapter/router/controller"
 	"orderbook/internal/core/port"
 	"orderbook/internal/core/service"
 )
@@ -10,6 +11,7 @@ import (
 type WalletModule struct {
 	Repository port.WalletRepository
 	Service    port.WalletService
+	Controller port.WalletController
 }
 
 func NewWalletModule(
@@ -18,6 +20,7 @@ func NewWalletModule(
 ) *WalletModule {
 	wr := repository.NewWalletRepository(connection)
 	ws := service.NewWalletService(wr)
+	wc := controller.NewWalletController(ws, wr)
 
 	eventMap := make(map[string]func(event []byte) error)
 
@@ -28,5 +31,6 @@ func NewWalletModule(
 	return &WalletModule{
 		wr,
 		ws,
+		wc,
 	}
 }

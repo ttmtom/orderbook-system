@@ -28,7 +28,7 @@ func NewRouter(
 	e.Pre(middleware.RemoveTrailingSlash())
 
 	{
-		e.GET("/health", func(e echo.Context) error {
+		e.GET("/_healthcheck", func(e echo.Context) error {
 			return e.String(http.StatusOK, "OK")
 		})
 	}
@@ -41,6 +41,11 @@ func NewRouter(
 	InitAuthRouter(
 		e,
 		moduleContainer.AuthModule.Controller,
+	)
+
+	InitWalletRouter(e,
+		moduleContainer.WalletModule.Controller,
+		moduleContainer.AuthModule.Middleware,
 	)
 
 	return &Router{e, config}
