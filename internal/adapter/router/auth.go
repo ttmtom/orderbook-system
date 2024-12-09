@@ -8,7 +8,9 @@ import (
 func InitAuthRouter(
 	e *echo.Echo,
 	ac port.AuthController,
+	am port.AuthMiddleware,
 ) {
 	e.POST("/login", ac.Login)
-	e.POST("/refreshToken", ac.RefreshToken)
+
+	e.POST("/refreshToken", ac.RefreshToken, am.HeaderAuthHandler())
 }

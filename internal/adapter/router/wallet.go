@@ -10,12 +10,11 @@ func InitWalletRouter(
 	wc port.WalletController,
 	am port.AuthMiddleware,
 ) {
-	e.Use(am.HeaderAuthHandler())
-
-	e.POST("/deposit", wc.Deposit)
-	e.POST("/withdrawal", wc.Withdrawal)
+	e.POST("/deposit", wc.Deposit, am.HeaderAuthHandler())
+	e.POST("/withdrawal", wc.Withdrawal, am.HeaderAuthHandler())
 	wallet := e.Group("/wallets")
 	{
+		wallet.Use(am.HeaderAuthHandler())
 		wallet.GET("", wc.GetMe)
 	}
 }

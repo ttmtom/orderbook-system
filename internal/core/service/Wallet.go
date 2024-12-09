@@ -2,21 +2,23 @@ package service
 
 import (
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"orderbook/internal/core/model"
 	"orderbook/internal/core/port"
 )
 
 type WalletService struct {
-	repo port.WalletRepository
+	repo     port.WalletRepository
+	userRepo port.UserRepository
 }
 
 func NewWalletService(
 	repo port.WalletRepository,
+	userRepository port.UserRepository,
 ) port.WalletService {
 	return &WalletService{
 		repo,
+		userRepository,
 	}
 }
 
@@ -53,5 +55,13 @@ func (ws *WalletService) OnUserRegistrationSuccess(event []byte) error {
 }
 
 func (ws *WalletService) GetWalletsByUserID(userId string) ([]*model.Wallet, error) {
-	return nil, errors.New("TODO")
+	user, _ := ws.userRepo.GetUserByIdHash(userId)
+
+	wallets, err := ws.repo.GetWalletsByUserID(user.ID)
+	if err != nil {
+		slog.Info("failed on getting user wallets", "userId", userId, "err", err)
+		return nil, err
+	}
+
+	return wallets, nil
 }

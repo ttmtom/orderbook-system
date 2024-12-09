@@ -41,6 +41,7 @@ func NewRouter(
 	InitAuthRouter(
 		e,
 		moduleContainer.AuthModule.Controller,
+		moduleContainer.AuthModule.Middleware,
 	)
 	InitWalletRouter(e,
 		moduleContainer.WalletModule.Controller,

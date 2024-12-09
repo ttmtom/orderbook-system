@@ -21,3 +21,15 @@ func (wr *WalletRepository) CreateWallet(wallet *model.Wallet) (*model.Wallet, e
 	}
 	return wallet, nil
 }
+
+func (wr *WalletRepository) GetWalletsByUserID(userID uint) ([]*model.Wallet, error) {
+	var wallets []*model.Wallet
+
+	result := wr.db.Model(&model.Wallet{}).
+		Where("user_id = ?", userID).
+		Find(&wallets)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return wallets, nil
+}

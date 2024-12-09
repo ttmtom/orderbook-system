@@ -17,9 +17,10 @@ type WalletModule struct {
 func NewWalletModule(
 	connection *gorm.DB,
 	eventManager port.EventRepository,
+	userRepository port.UserRepository,
 ) *WalletModule {
 	wr := repository.NewWalletRepository(connection)
-	ws := service.NewWalletService(wr)
+	ws := service.NewWalletService(wr, userRepository)
 	wc := controller.NewWalletController(ws, wr)
 
 	eventMap := make(map[string]func(event []byte) error)
