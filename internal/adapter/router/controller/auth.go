@@ -9,6 +9,7 @@ import (
 	"orderbook/internal/core/service"
 	"orderbook/internal/pkg/response"
 	"orderbook/pkg/utils"
+	"strings"
 )
 
 type AuthController struct {
@@ -25,7 +26,7 @@ func NewAuthController(validator *validator.Validate, svc port.AuthService) port
 
 type userLoginRequest struct {
 	Email    string `param:"email" validate:"required,email" example:"hi@example.com"`
-	Password string `json:"password" validate:"required,cPassword"`
+	Password string `param:"password" validate:"required,cPassword"`
 }
 
 func (uc *AuthController) Login(ctx echo.Context) error {
@@ -52,7 +53,7 @@ func (uc *AuthController) Login(ctx echo.Context) error {
 }
 
 type refreshRequest struct {
-	Token string `param:"token" validate:"required" example:"hi@example.com"`
+	Token string `param:"token" validate:"required"`
 }
 
 func (uc *AuthController) RefreshToken(ctx echo.Context) error {
@@ -62,7 +63,9 @@ func (uc *AuthController) RefreshToken(ctx echo.Context) error {
 		return response.FailureResponse(http.StatusBadRequest, err.Error())
 	}
 
-	token, err := uc.svc.RefreshToken(req.Token)
+	accessToken := ctx.Request().Header.Get("Authorization")
+
+	token, err := uc.svc.RefreshToken(strings.TrimPrefix(accessToken, "Bearer "), req.Token)
 	if err != nil {
 		return response.FailureResponse(http.StatusBadRequest, err.Error())
 	}

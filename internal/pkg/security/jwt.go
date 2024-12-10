@@ -58,7 +58,7 @@ func GenerateJwtToken(user *model.User, expiration uint, tokenType JWTTokenType)
 	return &signedToken, claims, nil
 }
 
-func ValidateJwtToken(tokenString string, tokenType JWTTokenType) (*UserClaims, error) {
+func ValidateJwtToken(tokenString string, tokenType JWTTokenType, args ...bool) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			slog.Info("Invalid token method")
@@ -67,10 +67,21 @@ func ValidateJwtToken(tokenString string, tokenType JWTTokenType) (*UserClaims, 
 		return js.secretKey, nil
 	})
 
+	ignoreError := false
+	if len(args) > 0 {
+		ignoreError = args[0]
+	}
+
 	user, ok := token.Claims.(*UserClaims)
-	if !ok || !token.Valid || user.Type != tokenType {
+	if !ignoreError && (!ok || !token.Valid || user.Type != tokenType) {
 		slog.Info("Error on Validate token", "err", ok, "token", token)
 		return nil, err
 	}
+
+	fmt.Println(ok)
+	fmt.Println(token)
+	fmt.Println(user)
+	fmt.Println("----- end")
+
 	return user, nil
 }

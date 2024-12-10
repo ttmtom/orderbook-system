@@ -10,13 +10,13 @@ const (
 )
 
 type Wallet struct {
-	ID       uint           `gorm:"primarykey" json:"id"`
-	UserID   uint           `gorm:"foreignKey:User;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	User     User           `gorm:"foreignkey:UserID"`
+	ID     uint `gorm:"primarykey" json:"id"`
+	UserID uint `gorm:"foreignKey:User;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	//User     User           `gorm:"foreignkey:UserID"`
 	Currency CryptoCurrency `gorm:"unique;not null" json:"currency"`
 	Balance  float64        `gorm:"not null" json:"balance"`
-	Locked   bool           `gorm:"not null" json:"locked"`
-	Hold     float64        `gorm:"not null" json:"hold"`
+	Blocked  bool           `gorm:"not null" json:"blocked"`
+	Locked   float64        `gorm:"not null" json:"locked"`
 
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -32,8 +32,9 @@ const (
 )
 
 type WalletHistory struct {
-	ID         uint       `gorm:"primarykey" json:"id"`
-	Wallet     Wallet     `gorm:"foreignkey:WalletId"`
+	ID       uint `gorm:"primarykey" json:"id"`
+	WalletID uint `gorm:"foreignKey:Wallet;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	//Wallet     Wallet     `gorm:"foreignkey:WalletId"`
 	Instrument Instrument `gorm:"foreignkey:InstrumentId"`
 	Status     Status     `gorm:"not null" json:"status"`
 
@@ -48,9 +49,11 @@ const (
 )
 
 type Instrument struct {
-	ID        uint           `gorm:"primarykey" json:"id"`
-	Wallet    Wallet         `gorm:"foreignkey:WalletId"`
-	User      User           `gorm:"foreignKey:UserId"`
+	ID       uint `gorm:"primarykey" json:"id"`
+	WalletID uint `gorm:"foreignKey:Wallet;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	//Wallet    Wallet         `gorm:"foreignkey:WalletId"`
+	UserID uint `gorm:"foreignKey:User;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	//User      User           `gorm:"foreignKey:UserId"`
 	Type      InstrumentType `gorm:"not null" json:"type"`
 	Amount    float64        `gorm:"not null" json:"amount"`
 	CreatedAt time.Time      `json:"createdAt"`

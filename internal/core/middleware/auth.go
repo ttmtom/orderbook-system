@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -10,6 +11,7 @@ import (
 	"orderbook/internal/core/port"
 	"orderbook/internal/pkg/response"
 	"orderbook/internal/pkg/security"
+	"strings"
 )
 
 type AuthMiddleware struct {
@@ -30,9 +32,17 @@ func NewAuthMiddleware(
 	}
 }
 
-func (am *AuthMiddleware) HeaderAuthHandler() func(next echo.HandlerFunc) echo.HandlerFunc {
-	errorHandler := func(c echo.Context, err error) error {
+func (am *AuthMiddleware) HeaderAuthHandler(args ...bool) func(next echo.HandlerFunc) echo.HandlerFunc {
+	continueOnIgnoredError := false
+	if len(args) > 0 {
+		continueOnIgnoredError = args[0]
+	}
+
+	errorHandler := func(ctx echo.Context, err error) error {
 		slog.Info("auth error", "err", err)
+		if errors.Is(err, echojwt.ErrJWTInvalid) && strings.Contains(err.Error(), "expired") && continueOnIgnoredError {
+			return nil
+		}
 		return response.FailureResponse(http.StatusUnauthorized, map[string]string{
 			"error":   "Invalid token",
 			"message": err.Error(),
@@ -52,7 +62,8 @@ func (am *AuthMiddleware) HeaderAuthHandler() func(next echo.HandlerFunc) echo.H
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(security.UserClaims)
 		},
-		SuccessHandler: successHandler,
+		SuccessHandler:         successHandler,
+		ContinueOnIgnoredError: continueOnIgnoredError,
 	}
 
 	return echojwt.WithConfig(mc)

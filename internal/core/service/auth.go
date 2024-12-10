@@ -52,7 +52,7 @@ func (as *AuthService) generateUserLoginToken(user *model.User) (*port.UserLogin
 		slog.Info("Failed to gen access time limit", err)
 		return nil, errors.New(string(Unexpected))
 	}
-	refreshToken, refreshClaims, err := security.GenerateJwtToken(user, refreshTimeLimit.Time, security.AccessToken)
+	refreshToken, refreshClaims, err := security.GenerateJwtToken(user, refreshTimeLimit.Time, security.RefreshToken)
 	if err != nil {
 		slog.Info("Failed to gen refresh time limit", err)
 		return nil, errors.New(string(Unexpected))
@@ -94,13 +94,22 @@ func (as *AuthService) UserAccess(user *security.UserClaims) {
 	as.userRepository.UpdateUserLastAccessAt(user.UserID)
 }
 
-func (as *AuthService) RefreshToken(token string) (*port.UserLoginToken, error) {
-	userClaims, err := security.ValidateJwtToken(token, security.RefreshToken)
+func (as *AuthService) RefreshToken(accessToken string, refreshToken string) (*port.UserLoginToken, error) {
+	userRefreshClaims, err := security.ValidateJwtToken(refreshToken, security.RefreshToken)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := as.userRepository.GetUserByIdHash(userClaims.UserID)
+	accessClaims, err := security.ValidateJwtToken(accessToken, security.AccessToken, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if accessClaims.UserID != userRefreshClaims.UserID {
+		return nil, err
+	}
+
+	user, err := as.userRepository.GetUserByIdHash(userRefreshClaims.UserID)
 
 	limit, err := as.commonRepository.GetTimeLimit("access_token")
 	if err != nil {
@@ -108,16 +117,16 @@ func (as *AuthService) RefreshToken(token string) (*port.UserLoginToken, error) 
 		return nil, errors.New(string(Unexpected))
 	}
 
-	accessToken, accessClaims, err := security.GenerateJwtToken(user, limit.Time, security.AccessToken)
+	newAccessToken, newAccessClaims, err := security.GenerateJwtToken(user, limit.Time, security.AccessToken)
 	if err != nil {
 		slog.Info("Failed to gen access time limit", err)
 		return nil, errors.New(string(Unexpected))
 	}
 
 	return &port.UserLoginToken{
-		AccessToken:        *accessToken,
-		AccessTokenClaims:  accessClaims,
-		RefreshToken:       token,
-		RefreshTokenClaims: userClaims,
+		AccessToken:        *newAccessToken,
+		AccessTokenClaims:  newAccessClaims,
+		RefreshToken:       refreshToken,
+		RefreshTokenClaims: userRefreshClaims,
 	}, nil
 }

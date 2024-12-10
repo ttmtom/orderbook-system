@@ -21,9 +21,9 @@ type AuthController interface {
 type AuthService interface {
 	UserLogin(email string, password string) (*model.User, *UserLoginToken, error)
 	UserAccess(user *security.UserClaims)
-	RefreshToken(token string) (*UserLoginToken, error)
+	RefreshToken(accessToken string, refreshToken string) (*UserLoginToken, error)
 }
 
 type AuthMiddleware interface {
-	HeaderAuthHandler() func(next echo.HandlerFunc) echo.HandlerFunc
+	HeaderAuthHandler(args ...bool) func(next echo.HandlerFunc) echo.HandlerFunc
 }

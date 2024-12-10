@@ -6,8 +6,8 @@ BEGIN;
         "user_id" SERIAL REFERENCES "users" ("id"),
         "currency" currency_type NOT NULL,
         "balance" NUMERIC(10, 8) NOT NULL DEFAULT 0.0,
-        "locked" BOOLEAN NOT NULL DEFAULT false,
-        "hold" NUMERIC(10, 8) NOT NULL DEFAULT 0.0,
+        "locked" NUMERIC(10, 8) NOT NULL DEFAULT 0.0,
+        "blocked" BOOLEAN DEFAULT false,
 
         "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         "updated_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

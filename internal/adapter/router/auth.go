@@ -11,6 +11,5 @@ func InitAuthRouter(
 	am port.AuthMiddleware,
 ) {
 	e.POST("/login", ac.Login)
-
-	e.POST("/refreshToken", ac.RefreshToken, am.HeaderAuthHandler())
+	e.POST("/refreshToken", ac.RefreshToken, am.HeaderAuthHandler(true))
 }
