@@ -1,9 +1,12 @@
 package repository
 
 import (
+	"fmt"
 	"gorm.io/gorm"
+	"log/slog"
 	"orderbook/internal/core/model"
 	"orderbook/internal/core/port"
+	"orderbook/internal/pkg/security"
 )
 
 type WalletRepository struct {
@@ -22,14 +25,45 @@ func (wr *WalletRepository) CreateWallet(wallet *model.Wallet) (*model.Wallet, e
 	return wallet, nil
 }
 
-func (wr *WalletRepository) GetWalletsByUserID(userID uint) ([]*model.Wallet, error) {
+func (wr *WalletRepository) GetWalletsByUserID(userID uint, filters ...map[string]interface{}) ([]*model.Wallet, error) {
 	var wallets []*model.Wallet
 
-	result := wr.db.Model(&model.Wallet{}).
-		Where("user_id = ?", userID).
-		Find(&wallets)
+	query := wr.db.Model(&model.Wallet{}).
+		Where("user_id = ?", userID)
+	for _, filter := range filters {
+		for key, value := range filter {
+			query.Where(fmt.Sprintf("%s = ?", key), value)
+		}
+	}
+
+	result := query.Find(&wallets)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return wallets, nil
+}
+
+func (wr *WalletRepository) CreateTransaction(transaction *model.Transaction) (*model.Transaction, error) {
+	err := wr.db.Transaction(func(tx *gorm.DB) error {
+		result := wr.db.Create(&transaction)
+		if result.Error != nil {
+			return result.Error
+		}
+		result = wr.db.Model(&transaction).Updates(map[string]interface{}{
+			"id_hash": security.HashUserId(transaction.ID),
+		})
+		if result.Error != nil {
+			return result.Error
+		}
+		slog.Info("transaction debug", "t", transaction)
+		newEvent := &model.TransactionEvent{TransactionID: transaction.ID, Type: model.Rejected}
+		result = wr.db.Create(&newEvent)
+		return result.Error
+	})
+
+	if err != nil {
+		slog.Info("Error on creating transaction", err.Error)
+		return nil, err
+	}
+	return transaction, nil
 }

@@ -22,39 +22,56 @@ type Wallet struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type Status string
+type TransactionType string
 
 const (
-	Pending   Status = "pending"
-	Completed Status = "completed"
-	Canceled  Status = "canceled"
-	Failed    Status = "failed"
+	Deposit    TransactionType = "deposit"
+	Withdrawal TransactionType = "withdrawal"
+	Transfer   TransactionType = "transfer"
+)
+
+type Transaction struct {
+	ID          uint            `gorm:"primarykey" json:"id"`
+	IDHash      string          `gorm:"unique;not null" json:"idHash"`
+	Amount      float64         `gorm:"not null" json:"balance"`
+	Type        TransactionType `gorm:"not null" json:"type"`
+	FromID      *uint           `gorm:"foreignKey:Wallet;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	ToID        *uint           `gorm:"foreignKey:Wallet;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Description string          `json:"description"`
+	CreatedAt   time.Time       `json:"createdAt"`
+}
+
+type TransactionEventType string
+
+const (
+	Pending   TransactionEventType = "pending"
+	Success   TransactionType      = "success"
+	Rejected  TransactionEventType = "rejected"
+	Cancelled TransactionEventType = "cancelled"
+)
+
+type TransactionEvent struct {
+	ID            uint                 `gorm:"primarykey" json:"id"`
+	TransactionID uint                 `gorm:"foreignKey:Transaction;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Type          TransactionEventType `gorm:"not null" json:"type"`
+	CreatedAt     time.Time            `json:"createdAt"`
+}
+
+type WalletActionType string
+
+const (
+	Increase WalletActionType = "increase"
+	Decrease WalletActionType = "decrease"
+	Lock     WalletActionType = "lock"
+	Release  WalletActionType = "release"
+	Commit   WalletActionType = "commit"
 )
 
 type WalletHistory struct {
 	ID       uint `gorm:"primarykey" json:"id"`
 	WalletID uint `gorm:"foreignKey:Wallet;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	//Wallet     Wallet     `gorm:"foreignkey:WalletId"`
-	Instrument Instrument `gorm:"foreignkey:InstrumentId"`
-	Status     Status     `gorm:"not null" json:"status"`
+	Action WalletActionType `gorm:"not null" json:"action"`
 
 	CreatedAt time.Time `json:"createdAt"`
-}
-
-type InstrumentType string
-
-const (
-	Withdrawal InstrumentType = "withdrawal"
-	Deposit    InstrumentType = "deposit"
-)
-
-type Instrument struct {
-	ID       uint `gorm:"primarykey" json:"id"`
-	WalletID uint `gorm:"foreignKey:Wallet;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	//Wallet    Wallet         `gorm:"foreignkey:WalletId"`
-	UserID uint `gorm:"foreignKey:User;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	//User      User           `gorm:"foreignKey:UserId"`
-	Type      InstrumentType `gorm:"not null" json:"type"`
-	Amount    float64        `gorm:"not null" json:"amount"`
-	CreatedAt time.Time      `json:"createdAt"`
 }

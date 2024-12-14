@@ -4,7 +4,7 @@ import (
 	"github.com/go-playground/validator"
 	"gorm.io/gorm"
 	"orderbook/internal/adapter/database/postgres/repository"
-	"orderbook/internal/adapter/router/controller"
+	"orderbook/internal/core/controller"
 	"orderbook/internal/core/port"
 	"orderbook/internal/core/service"
 )

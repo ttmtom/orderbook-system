@@ -3,7 +3,7 @@ BEGIN;
 
     CREATE TABLE "wallets" (
         "id" SERIAL PRIMARY KEY,
-        "user_id" SERIAL REFERENCES "users" ("id"),
+        "user_id" INT REFERENCES "users" ("id"),
         "currency" currency_type NOT NULL,
         "balance" NUMERIC(10, 8) NOT NULL DEFAULT 0.0,
         "locked" NUMERIC(10, 8) NOT NULL DEFAULT 0.0,
@@ -15,24 +15,13 @@ BEGIN;
         UNIQUE ("user_id", "currency")
     );
 
-    CREATE TYPE "instrument_type" AS ENUM ('deposit', 'withdrawal');
-
-    CREATE TABLE "instruments" (
-        "id" SERIAL PRIMARY KEY,
-        "wallet_id" SERIAL REFERENCES  "wallets" ("id"),
-        "amount" NUMERIC(10, 8) NOT NULL,
-        "type" instrument_type NOT NULL,
-        "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TYPE "status" AS ENUM ('pending', 'completed', 'failed', 'canceled');
+    CREATE TYPE "wallet_action_type" AS ENUM ('increase', 'decrease', 'lock', 'release', 'commit');
 
     CREATE TABLE "wallet_histories" (
         "id" SERIAL PRIMARY KEY,
-        "wallet_id" SERIAL REFERENCES "wallets" ("id"),
-        "instrument_id" SERIAL REFERENCES "instruments" ("id"),
-        "status" status NOT NULL,
+        "wallet_id" INT REFERENCES "wallets" ("id"),
+        "amount" NUMERIC(10, 8) NOT NULL DEFAULT 0.0,
+        "action" wallet_action_type NOT NULL,
         "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
-
 COMMIT;

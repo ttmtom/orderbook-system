@@ -1,10 +1,7 @@
 BEGIN;
     DROP TABLE wallet_histories;
-    DROP TABLE instruments;
+    DROP TYPE wallet_action_type;
+
     DROP TABLE wallets;
-
-    DROP TYPE status;
-    DROP TYPE instrument_type;
     DROP TYPE currency_type;
-
 COMMIT;

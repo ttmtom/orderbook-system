@@ -3,7 +3,7 @@ package module
 import (
 	"github.com/go-playground/validator"
 	"orderbook/config"
-	"orderbook/internal/adapter/router/controller"
+	"orderbook/internal/core/controller"
 	"orderbook/internal/core/middleware"
 	"orderbook/internal/core/port"
 	"orderbook/internal/core/service"
@@ -25,7 +25,6 @@ func NewAuthModule(
 	ac := controller.NewAuthController(validator, as)
 	mid := middleware.NewAuthMiddleware(
 		config,
-		//commonModule.Repository,
 		as,
 	)
 

@@ -1,9 +1,10 @@
 package module
 
 import (
+	"github.com/go-playground/validator"
 	"gorm.io/gorm"
 	"orderbook/internal/adapter/database/postgres/repository"
-	"orderbook/internal/adapter/router/controller"
+	"orderbook/internal/core/controller"
 	"orderbook/internal/core/port"
 	"orderbook/internal/core/service"
 )
@@ -16,12 +17,13 @@ type WalletModule struct {
 
 func NewWalletModule(
 	connection *gorm.DB,
+	validator *validator.Validate,
 	eventManager port.EventRepository,
 	userRepository port.UserRepository,
 ) *WalletModule {
 	wr := repository.NewWalletRepository(connection)
 	ws := service.NewWalletService(wr, userRepository)
-	wc := controller.NewWalletController(ws, wr)
+	wc := controller.NewWalletController(ws, validator)
 
 	eventMap := make(map[string]func(event []byte) error)
 

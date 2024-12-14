@@ -26,7 +26,7 @@ func InitModuleContainer(
 	commonModule := NewCommonModule(connection)
 	userModule := NewUserModule(connection, validator, eventModule.Repository)
 	authModule := NewAuthModule(config.AppConfig, validator, commonModule.Repository, userModule.Repository)
-	walletModule := NewWalletModule(connection, eventModule.Repository, userModule.Repository)
+	walletModule := NewWalletModule(connection, validator, eventModule.Repository, userModule.Repository)
 
 	return &Container{
 		eventModule,

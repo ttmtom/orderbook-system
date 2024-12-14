@@ -65,3 +65,42 @@ func (ws *WalletService) GetWalletsByUserID(userId string) ([]*model.Wallet, err
 
 	return wallets, nil
 }
+
+func (ws *WalletService) Deposit(userId string, currency model.CryptoCurrency, source string, amount float64) (*model.Transaction, error) {
+	user, _ := ws.userRepo.GetUserByIdHash(userId)
+
+	filters := make(map[string]interface{})
+	filters["currency"] = currency
+
+	wallets, err := ws.repo.GetWalletsByUserID(user.ID, filters)
+	if err != nil {
+		slog.Info("failed on getting user wallets", "userId", userId, "err", err)
+		return nil, err
+	}
+
+	t := &model.Transaction{
+		ToID:        &wallets[0].ID,
+		Type:        model.Deposit,
+		Amount:      amount,
+		Description: source,
+	}
+
+	t, err = ws.repo.CreateTransaction(t)
+
+	if err != nil {
+		slog.Info("failed on create t", "t", t, "err", err)
+		return nil, err
+	}
+
+	return t, nil
+}
+
+func (ws *WalletService) Withdraw(userId string, currency model.CryptoCurrency, destination string) (*model.Transaction, error) {
+	user, _ := ws.userRepo.GetUserByIdHash(userId)
+
+	filters := make(map[string]interface{})
+	filters["currency"] = currency
+
+	_, err := ws.repo.GetWalletsByUserID(user.ID, filters)
+	return nil, err
+}
