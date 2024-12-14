@@ -13,5 +13,11 @@ func New() *validator.Validate {
 	}
 	v.RegisterAlias("cPassword", "validPWD")
 
+	err = v.RegisterValidation("cryptoCurrencyEnum", isValidCryptoCurrency)
+	if err != nil {
+		return nil
+	}
+	v.RegisterAlias("cCryptoCurrencyEnum", "cryptoCurrencyEnum")
+
 	return v
 }

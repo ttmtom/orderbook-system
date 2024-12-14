@@ -28,7 +28,7 @@ func NewWalletController(svc port.WalletService, validator *validator.Validate) 
 
 type depositRequest struct {
 	Amount   float64              `json:"amount" validate:"required,gt=0"`
-	Currency model.CryptoCurrency `json:"currency" validate:"required"`
+	Currency model.CryptoCurrency `json:"currency" validate:"required,cCryptoCurrencyEnum"`
 	Source   string               `json:"source" validate:"required"`
 }
 
