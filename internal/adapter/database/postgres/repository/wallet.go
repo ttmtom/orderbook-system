@@ -55,8 +55,7 @@ func (wr *WalletRepository) CreateTransaction(transaction *model.Transaction) (*
 		if result.Error != nil {
 			return result.Error
 		}
-		slog.Info("transaction debug", "t", transaction)
-		newEvent := &model.TransactionEvent{TransactionID: transaction.ID, Type: model.Rejected}
+		newEvent := &model.TransactionEvent{TransactionID: transaction.ID, Type: model.Pending}
 		result = wr.db.Create(&newEvent)
 		return result.Error
 	})

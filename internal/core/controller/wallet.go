@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -52,17 +51,30 @@ func (wc *WalletController) Deposit(ctx echo.Context) error {
 	})
 }
 
-type WithdrawRequest struct {
-	Amount     float64 `json:"amount" binding:"required"`
-	Currency   string  `json:"currency" binding:"required"`
-	Departures string  `json:"departures" binding:"required"`
+type withdrawRequest struct {
+	Amount     float64              `json:"amount" binding:"required"`
+	Currency   model.CryptoCurrency `json:"currency" validate:"required,cCryptoCurrencyEnum"`
+	Departures string               `json:"departures" binding:"required"`
 }
 
 func (wc *WalletController) Withdrawal(ctx echo.Context) error {
-	//userToken := ctx.Get("user").(*jwt.Token)
-	//userClaims := userToken.Claims.(*security.UserClaims)
+	userToken := ctx.Get("user").(*jwt.Token)
+	userClaims := userToken.Claims.(*security.UserClaims)
 
-	return errors.New("TODO")
+	req, err := utils.ValidateStruct(ctx, wc.validator, new(withdrawRequest))
+	if err != nil {
+		slog.Info("Validation Error", err.Error())
+		return err
+	}
+
+	t, err := wc.svc.Withdrawal(userClaims.UserID, req.Currency, req.Departures, req.Amount)
+	if err != nil {
+		return err
+	}
+
+	return response.SuccessResponse(ctx, http.StatusOK, map[string]interface{}{
+		"transaction": t.IDHash,
+	})
 }
 
 func (wc *WalletController) GetMe(ctx echo.Context) error {

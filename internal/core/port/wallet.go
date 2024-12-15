@@ -15,6 +15,7 @@ type WalletService interface {
 	OnUserRegistrationSuccess(event []byte) error
 	GetWalletsByUserID(userID string) ([]*model.Wallet, error)
 	Deposit(userId string, currency model.CryptoCurrency, source string, amount float64) (*model.Transaction, error)
+	Withdrawal(userId string, currency model.CryptoCurrency, departures string, amount float64) (*model.Transaction, error)
 }
 
 type WalletController interface {
