@@ -20,6 +20,7 @@ type Handler interface {
 
 func NewRouter(
 	config *config.HttpConfig,
+	appconfig *config.AppConfig,
 	moduleContainer *module.Container,
 ) *Router {
 	e := echo.New()
@@ -43,10 +44,15 @@ func NewRouter(
 		moduleContainer.AuthModule.Controller,
 		moduleContainer.AuthModule.Middleware,
 	)
-	InitWalletRouter(e,
+	InitWalletRouter(
+		e,
 		moduleContainer.WalletModule.Controller,
 		moduleContainer.AuthModule.Middleware,
 	)
+
+	if appconfig.AdminBuild {
+		InitAdminRouter(e)
+	}
 
 	return &Router{e, config}
 }

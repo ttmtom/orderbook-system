@@ -27,6 +27,7 @@ func main() {
 
 	r := router.NewRouter(
 		c.HttpConfig,
+		c.AppConfig,
 		moduleContainer,
 	)
 
