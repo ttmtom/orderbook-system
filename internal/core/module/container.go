@@ -13,6 +13,7 @@ type Container struct {
 	CommonModule *CommonModule
 	WalletModule *WalletModule
 	AuthModule   *AuthModule
+	AdminModule  *AdminModule
 }
 
 func InitModuleContainer(
@@ -28,11 +29,17 @@ func InitModuleContainer(
 	authModule := NewAuthModule(config.AppConfig, validator, commonModule.Repository, userModule.Repository)
 	walletModule := NewWalletModule(connection, validator, eventModule.Repository, userModule.Repository)
 
+	var adminModule *AdminModule = nil
+	if config.AppConfig.AdminBuild {
+		adminModule = NewAdminModule()
+	}
+
 	return &Container{
 		eventModule,
 		userModule,
 		commonModule,
 		walletModule,
 		authModule,
+		adminModule,
 	}
 }

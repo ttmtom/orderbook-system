@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"log/slog"
-	"orderbook/internal/core/model"
 	"time"
 )
 
@@ -17,7 +16,7 @@ const (
 
 type UserClaims struct {
 	UserID string       `json:"id"`
-	Email  string       `json:"email"`
+	Role   string       `json:"role"`
 	MaxAge uint         `json:"maxAge"`
 	Type   JWTTokenType `json:"type"`
 	jwt.RegisteredClaims
@@ -35,10 +34,10 @@ func InitJwtSecurity(secretKey string) {
 	}
 }
 
-func GenerateJwtToken(user *model.User, expiration uint, tokenType JWTTokenType) (*string, *UserClaims, error) {
+func GenerateJwtToken(signID string, role string, expiration uint, tokenType JWTTokenType) (*string, *UserClaims, error) {
 	claims := &UserClaims{
-		user.IDHash,
-		user.Email,
+		signID,
+		role,
 		expiration,
 		tokenType,
 		jwt.RegisteredClaims{
@@ -77,11 +76,6 @@ func ValidateJwtToken(tokenString string, tokenType JWTTokenType, args ...bool) 
 		slog.Info("Error on Validate token", "err", ok, "token", token)
 		return nil, err
 	}
-
-	fmt.Println(ok)
-	fmt.Println(token)
-	fmt.Println(user)
-	fmt.Println("----- end")
 
 	return user, nil
 }

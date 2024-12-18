@@ -47,12 +47,12 @@ func (as *AuthService) generateUserLoginToken(user *model.User) (*port.UserLogin
 		return nil, errors.New(string(Unexpected))
 	}
 
-	accessToken, accessClaims, err := security.GenerateJwtToken(user, accessTimeLimit.Time, security.AccessToken)
+	accessToken, accessClaims, err := security.GenerateJwtToken(user.IDHash, "user", accessTimeLimit.Time, security.AccessToken)
 	if err != nil {
 		slog.Info("Failed to gen access time limit", err)
 		return nil, errors.New(string(Unexpected))
 	}
-	refreshToken, refreshClaims, err := security.GenerateJwtToken(user, refreshTimeLimit.Time, security.RefreshToken)
+	refreshToken, refreshClaims, err := security.GenerateJwtToken(user.IDHash, "user", refreshTimeLimit.Time, security.RefreshToken)
 	if err != nil {
 		slog.Info("Failed to gen refresh time limit", err)
 		return nil, errors.New(string(Unexpected))
@@ -117,7 +117,7 @@ func (as *AuthService) RefreshToken(accessToken string, refreshToken string) (*p
 		return nil, errors.New(string(Unexpected))
 	}
 
-	newAccessToken, newAccessClaims, err := security.GenerateJwtToken(user, limit.Time, security.AccessToken)
+	newAccessToken, newAccessClaims, err := security.GenerateJwtToken(user.IDHash, "user", limit.Time, security.AccessToken)
 	if err != nil {
 		slog.Info("Failed to gen access time limit", err)
 		return nil, errors.New(string(Unexpected))

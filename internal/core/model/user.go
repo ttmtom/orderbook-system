@@ -5,15 +5,19 @@ import (
 	"time"
 )
 
-type User struct {
+type UserBase struct {
 	ID           uint         `gorm:"primarykey" json:"id"`
-	IDHash       string       `gorm:"unique;not null" json:"idHash"`
 	Email        string       `gorm:"unique;not null" json:"email"`
 	PasswordHash string       `gorm:"not null" json:"passwordHash"`
-	DisplayName  *string      `json:"displayName"`
 	CreatedAt    time.Time    `json:"createdAt"`
 	UpdatedAt    time.Time    `json:"updatedAt"`
-	LastLoginAt  time.Time    `json:"lastLoginAt"`
-	LastAccessAt time.Time    `json:"lastAccessAt"`
 	DeletedAt    sql.NullTime `gorm:"index" json:"deletedAt"`
+}
+
+type User struct {
+	UserBase
+	IDHash       string    `gorm:"unique;not null" json:"idHash"`
+	DisplayName  *string   `json:"displayName"`
+	LastLoginAt  time.Time `json:"lastLoginAt"`
+	LastAccessAt time.Time `json:"lastAccessAt"`
 }

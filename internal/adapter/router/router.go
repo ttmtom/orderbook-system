@@ -51,7 +51,9 @@ func NewRouter(
 	)
 
 	if appconfig.AdminBuild {
-		InitAdminRouter(e)
+		InitAdminRouter(
+			e,
+		)
 	}
 
 	return &Router{e, config}
