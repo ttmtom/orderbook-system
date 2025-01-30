@@ -9,8 +9,9 @@ func InitAdminRouter(
 	e *echo.Echo,
 ) {
 	admin := e.Group("/admin")
+	adminWallet := admin.Group("/wallet")
 	{
-		admin.GET("/", func(e echo.Context) error {
+		adminWallet.GET("/pending", func(e echo.Context) error {
 			return e.String(http.StatusOK, "ADMIN")
 		})
 	}

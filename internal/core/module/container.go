@@ -31,7 +31,7 @@ func InitModuleContainer(
 
 	var adminModule *AdminModule = nil
 	if config.AppConfig.AdminBuild {
-		adminModule = NewAdminModule()
+		adminModule = NewAdminModule(config, connection, validator)
 	}
 
 	return &Container{

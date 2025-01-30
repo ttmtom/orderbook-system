@@ -11,7 +11,7 @@ func InitUserRouter(
 	am port.AuthMiddleware,
 ) {
 	e.POST("/register", uc.Register)
-	user := e.Group("/user")
+	user := e.Group("/users")
 	{
 		user.Use(am.HeaderAuthHandler())
 		user.GET("", uc.GetMe)
